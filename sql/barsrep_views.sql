@@ -1,0 +1,5929 @@
+--  Generate SQL 
+--  Version:                   	V6R1M0 080215 
+--  Generated on:              	05/05/16 14:02:40 
+--  Relational Database:       	BARSREP 
+--  Standards Option:          	DB2 for i 
+CREATE VIEW DWH.ACCRLN_VW ( 
+	BSAACID , 
+	ACID , 
+	CCY , 
+	ACC2 , 
+	GLACOD , 
+	AC , 
+	BC , 
+	CNUM , 
+	DRLNO , 
+	DRLNC , 
+	DAT , 
+	DATTO ) 
+	AS 
+	SELECT A.BSAACID, 
+	 A.ACID, 
+	 C.GLCCY, 
+	 A.ACC2, 
+	 A.GLACOD, 
+	 B.OBAC + B.CTAC + B.DTAC, 
+	 B.OBBC + B.CTBC + B.DTBC, 
+	 A.CNUM, 
+	 A.DRLNO, 
+	 A.DRLNC, 
+	 B.DAT, 
+	 B.DATTO 
+	 FROM DWH.ACCRLN A 
+	 JOIN DWH.BALTUR B 
+	 ON A.ACID = B.ACID 
+	 AND A.BSAACID = B.BSAACID 
+	 JOIN DWH.CURRENCY C 
+	 ON A.CBCCY = C.CBCCY ; 
+  
+LABEL ON COLUMN DWH.ACCRLN_VW 
+( BSAACID IS 'BSA Account ID' , 
+	ACID IS 'GL Account ID' , 
+	DRLNO IS 'Date Relationship   Opened' , 
+	DRLNC IS 'Date Relationship   Closed' , 
+	DAT IS 'Date From' , 
+	DATTO IS 'Date To' ) ; 
+  
+LABEL ON COLUMN DWH.ACCRLN_VW 
+( BSAACID TEXT IS 'BSA Account ID' , 
+	ACID TEXT IS 'GL Account ID' , 
+	ACC2 TEXT IS 'BSS Account' , 
+	GLACOD TEXT IS 'Account Code' , 
+	CNUM TEXT IS 'Customer Number' , 
+	DRLNO TEXT IS 'Date Relationship Opened' , 
+	DRLNC TEXT IS 'Date Relationship Closed' ) ; 
+  
+CREATE VIEW DWH.ACCRLN401 ( 
+	ACID , 
+	BSAACID , 
+	RLNTYPE , 
+	DRLNO , 
+	DRLNC , 
+	CTYPE , 
+	CNUM , 
+	CCODE , 
+	ACC2 , 
+	PSAV , 
+	GLACOD , 
+	CBCCY , 
+	PLCODE , 
+	INCL , 
+	PAIRBSA , 
+	TRANSACTSRC FOR COLUMN TRANS00001 , 
+	ACID_401 ) 
+	AS 
+	( 
+	SELECT A.ACID, A.BSAACID, A.RLNTYPE,  
+	CASE WHEN B.DRLNO IS NULL THEN A.DRLNO ELSE MIN(B.DRLNO, A.DRLNO) END AS DRLNO,  
+	CASE WHEN B.DRLNC IS NULL THEN A.DRLNC ELSE MAX (B.DRLNC, A.DRLNC) END AS DRLNC, 
+	A.CTYPE, A.CNUM, A.CCODE, A.ACC2, A.PSAV, A.GLACOD, A.CBCCY,  
+	A.PLCODE, A.INCL, A.PAIRBSA,  
+	CASE WHEN B.TRANSACTSRC IS NULL THEN A.TRANSACTSRC ELSE MAX(A.TRANSACTSRC, B.TRANSACTSRC) END AS TRANSACTSRC, 
+	VALUE(B.ACID, A.ACID) AS ACID_401 
+	FROM DWH.ACCRLN A 
+	LEFT JOIN DWH.ACCRLN B 
+	ON A.BSAACID=B.BSAACID 
+	AND A.ACID <> B.ACID 
+	AND B.ACID LIKE '00000018RUR1898%' 
+	WHERE NOT ( A.ACID LIKE '00000018RUR1898%' 
+	AND EXISTS (SELECT 1 FROM DWH.ACCRLN C 
+	WHERE C.BSAACID=A.BSAACID AND C.ACID<>A.ACID ))) ; 
+  
+LABEL ON COLUMN DWH.ACCRLN401 
+( ACID IS 'GL Account ID' , 
+	BSAACID IS 'BSA Account ID' , 
+	RLNTYPE IS 'Relationship Type' ) ; 
+  
+LABEL ON COLUMN DWH.ACCRLN401 
+( ACID TEXT IS 'GL Account ID' , 
+	BSAACID TEXT IS 'BSA Account ID' , 
+	RLNTYPE TEXT IS 'Relationship Type' , 
+	CTYPE TEXT IS 'Customer Type' , 
+	CNUM TEXT IS 'Customer Number' , 
+	CCODE TEXT IS 'Company Code' , 
+	ACC2 TEXT IS 'BSS Account' , 
+	PSAV TEXT IS 'Passive/Active Indicator' , 
+	GLACOD TEXT IS 'Account Code' , 
+	CBCCY TEXT IS 'CB Currency Code' , 
+	PLCODE TEXT IS 'P/L Code' ) ; 
+  
+CREATE VIEW DWH.ACCRLNLF ( 
+	CNUM , 
+	CCY ) 
+	AS 
+	SELECT  
+		CAST ( SUBSTR ( ACID , 1 , 8 ) AS CHAR(8) CCSID 1025 ) ,  
+		CAST ( SUBSTR ( ACID , 9 , 3 ) AS CHAR(3) CCSID 1025 )  
+		FROM DWH.ACCRLN  
+		  
+		RCDFMT ACCRLN ; 
+  
+LABEL ON TABLE DWH.ACCRLNLF 
+	IS 'TEST LF BY BALNO' ; 
+  
+CREATE VIEW DWH.ASSCUST157_VIEW ( 
+	CNUMG , 
+	CNUMA , 
+	DATE1 , 
+	DATE2 ) 
+	AS 
+	SELECT DISTINCT(A1.CNUMG) CNUMG, A1.CNUMG CNUMA, A1.DATE1 DATE1, A1.DATE2  
+		 DATE2  
+		 FROM DWH.ASSCUST157 A1  
+		UNION  
+		SELECT A2.CNUMG CNUMG, A2.CNUMA CNUMA, A2.DATE1 DATE1, A2.DATE2 DATE2  
+		 FROM DWH.ASSCUST157 A2 ; 
+  
+LABEL ON TABLE DWH.ASSCUST157_VIEW 
+	IS 'View for ASSCUST157 table with group union' ; 
+  
+LABEL ON COLUMN DWH.ASSCUST157_VIEW 
+( CNUMG TEXT IS 'linking customer number' , 
+	CNUMA TEXT IS 'linking customer number' , 
+	DATE1 TEXT IS 'link from date' , 
+	DATE2 TEXT IS 'link to date' ) ; 
+  
+CREATE VIEW DWH.AUDIT_ACC_13_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CB_ACCOUNT , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	DEAL_ID ) 
+	AS 
+	SELECT CL.CLIENT_NUMBER, A13.MIDAS_ACCOUNT, A13.COUNTRY_CODE, A13.CB_ACCOUNT, A13.CURRENCY_CODE, A13.BALANCE_CUR, A13.REPORT_DATE, A13.DEAL_ID 
+	  
+	FROM DWH.AUDIT00047 A13  
+	  
+	 JOIN DWH.AUDIT00009 CL 
+	  
+	 ON CL.CLIENT_NUMBER = A13.CLIENT_NUMBER 
+	  
+	 AND CL.DAT = A13.REPORT_DATE 
+	  
+	 AND CL.PRACC = '1' 
+	  
+	WHERE SUBSTR(A13.CB_ACCOUNT,1,3) IN ('401','402','403','404','405','406','407','408','409') ; 
+  
+LABEL ON COLUMN DWH.AUDIT_ACC_13_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' ) ; 
+  
+CREATE VIEW DWH.AUDIT_ACC_2_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	ACC2 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	ACC_OPEN_DATE FOR COLUMN ACC_O00001 , 
+	GLCCY , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT  
+	 CNUM,  
+	 CASE  
+	 WHEN COUNTRY_CODE<>'RU' AND ACC2='Лоро' THEN 'Vostro' 
+	 WHEN COUNTRY_CODE<>'RU' AND ACC2='Ностро' THEN 'Nostro' 
+	 ELSE ACC2 
+	 END ACC2,  
+	 CURRENCY_CODE,  
+	 CASE  
+	 WHEN COUNTRY_CODE='RU' AND DAY(ACC_OPEN_DATE)>9 AND MONTH(ACC_OPEN_DATE)>9 THEN DAY(ACC_OPEN_DATE)||'.'||MONTH(ACC_OPEN_DATE)||'.'||YEAR(ACC_OPEN_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(ACC_OPEN_DATE)<10 AND MONTH(ACC_OPEN_DATE)<10 THEN '0'||DAY(ACC_OPEN_DATE)||'.'||'0'||MONTH(ACC_OPEN_DATE)||'.'||YEAR(ACC_OPEN_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(ACC_OPEN_DATE)>9 AND MONTH(ACC_OPEN_DATE)<10 THEN DAY(ACC_OPEN_DATE)||'.'||'0'||MONTH(ACC_OPEN_DATE)||'.'||YEAR(ACC_OPEN_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(ACC_OPEN_DATE)<10 AND MONTH(ACC_OPEN_DATE)>9 THEN '0'||DAY(ACC_OPEN_DATE)||'.'||MONTH(ACC_OPEN_DATE)||'.'||YEAR(ACC_OPEN_DATE)  
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=1 THEN DAY(ACC_OPEN_DATE)||' '||'January'||' '||YEAR(ACC_OPEN_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=2 THEN DAY(ACC_OPEN_DATE)||' '||'February'||' '||YEAR(ACC_OPEN_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=3 THEN DAY(ACC_OPEN_DATE)||' '||'March'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=4 THEN DAY(ACC_OPEN_DATE)||' '||'April'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=5 THEN DAY(ACC_OPEN_DATE)||' '||'May'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=6 THEN DAY(ACC_OPEN_DATE)||' '||'June'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=7 THEN DAY(ACC_OPEN_DATE)||' '||'July'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=8 THEN DAY(ACC_OPEN_DATE)||' '||'August'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=9 THEN DAY(ACC_OPEN_DATE)||' '||'September'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                        	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=10 THEN DAY(ACC_OPEN_DATE)||' '||'October'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                         	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=11 THEN DAY(ACC_OPEN_DATE)||' '||'November'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                        	 WHEN COUNTRY_CODE<>'RU' AND MONTH(ACC_OPEN_DATE)=12 THEN DAY(ACC_OPEN_DATE)||' '||'December'||' '||YEAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                        	 ELSE CHAR(ACC_OPEN_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      	 END ACC_OPEN_DATE,  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            	 GLCCY,  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        	 REPORT_DATE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   	 FROM DWH.AUDIT00050 ; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                CREATE VIEW DWH.AUDIT_ACC_2_VW ( 
+	CNUM , 
+	BSAACID , 
+	ACID , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	ACC2 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	ACC_OPEN_DATE FOR COLUMN ACC_O00001 , 
+	GLCCY , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT  
+	 APP.CNUM, 
+	 APP.BSAACID, 
+	 APP.ACID,  
+	 APP.COUNTRY_CODE, 
+	 APP.ACC2, 
+	 APP.CURRENCY_CODE, 
+	 APP.ACC_OPEN_DATE, 
+	 CASE WHEN APP.ACC2='Лоро' OR APP.GLCCY <> (SELECT MAX(GLCCY) FROM DWH.AUDIT00007 WHERE CNUM=APP.CNUM AND BSAACID= 
+	 APP.BSAACID AND REPORT_DATE=APP.REPORT_DATE) THEN APP.GLCCY ELSE NULL END GLCCY, 
+	 APP.REPORT_DATE 
+	 FROM DWH.AUDIT00009 CL JOIN DWH.AUDIT00034 APP ON CL.DAT=APP.REPORT_DATE AND CL.CLIENT_NUMBER= APP.CNUM 
+	 WHERE CL.PR2='1' ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_13_VW ( 
+	FILIAL_CODE FOR COLUMN FILIA00001 , 
+	CLIENT_NAME FOR COLUMN CLIEN00001 , 
+	CB_ACCOUNT , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE_RUR FOR COLUMN BALAN00002 , 
+	VALUE_DATE , 
+	MATURITY_DATE FOR COLUMN MATUR00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	NEXT_INT_RATE FOR COLUMN NEXT_00001 , 
+	INTEREST_FREQUENCY FOR COLUMN INTER00002 , 
+	LAST_INTEREST_DATE FOR COLUMN LAST_00001 , 
+	INTEREST_ACCOUNT FOR COLUMN INTER00003 , 
+	INTEREST_AMOUNT FOR COLUMN INTER00004 , 
+	RELATION_SIDE FOR COLUMN RELAT00001 , 
+	SUB_DEPOSIT FOR COLUMN SUB_D00001 , 
+	DELIM , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	DEAL_NUMBER FOR COLUMN DEAL_00001 , 
+	DEAL_ID , 
+	BSS_ACCOUNT FOR COLUMN BSS_A00001 , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	CLIENT_NUMBER FOR COLUMN CLIEN00002 , 
+	IS_DEL , 
+	COR ) 
+	AS 
+	SELECT COR.FILIAL_CODE, COR.CLIENT_NAME, COR.CB_ACCOUNT, COR.COUNTRY_CODE, COR.CURRENCY_CODE, COR.BALANCE_CUR, COR.BALANCE_RUR, COR.VALUE_DATE, COR.MATURITY_DATE, COR.INTEREST_RATE, COR.NEXT_INT_RATE, COR.INTEREST_FREQUENCY, COR.LAST_INTEREST_DATE, COR.INTEREST_ACCOUNT, COR.INTEREST_AMOUNT, COR.RELATION_SIDE, COR.SUB_DEPOSIT, COR.DELIM, COR.REPORT_DATE, COR.DEAL_NUMBER, COR.DEAL_ID, COR.BSS_ACCOUNT, COR.MIDAS_ACCOUNT, COR.CLIENT_NUMBER, COR.IS_DEL, '1' AS COR FROM DWH.AUDIT00025 COR, DWH.AUDIT00003 ORG WHERE (COR.REPORT_DATE = ORG.REPORT_DATE AND COR.DEAL_ID = ORG.DEAL_ID AND COR.CB_ACCOUNT = ORG.CB_ACCOUNT AND COR.IS_DEL='0' AND ORG.IS_DEL='0') UNION SELECT ORG.FILIAL_CODE, ORG.CLIENT_NAME, ORG.CB_ACCOUNT, ORG.COUNTRY_CODE, ORG.CURRENCY_CODE, ORG.BALANCE_CUR, ORG.BALANCE_RUR, ORG.VALUE_DATE, ORG.MATURITY_DATE, ORG.INTEREST_RATE, ORG.NEXT_INT_RATE, ORG.INTEREST_FREQUENCY, ORG.LAST_INTEREST_DATE, ORG.INTEREST_ACCOUNT, ORG.INTEREST_AMOUNT, ORG.RELATION_SIDE, ORG.SUB_DEPOSIT, ORG.DELIM, ORG.REPORT_DATE, ORG.DEAL_NUMBER, ORG.DEAL_ID, ORG.BSS_ACCOUNT, ORG.MIDAS_ACCOUNT, ORG.CLIENT_NUMBER, ORG.IS_DEL, '0' AS COR FROM DWH.AUDIT00003 ORG WHERE ORG.IS_DEL='0' AND NOT EXISTS( SELECT COR.CB_ACCOUNT FROM DWH.AUDIT00025 COR WHERE COR.REPORT_DATE = ORG.REPORT_DATE AND COR.DEAL_ID = ORG.DEAL_ID AND COR.CB_ACCOUNT = ORG.CB_ACCOUNT AND COR.IS_DEL='0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_14_VW ( 
+	FILIAL , 
+	CNUM , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CB_ACCOUNT , 
+	COUNTRY , 
+	LIMIT_TYPE , 
+	VALUATION_CCY FOR COLUMN VALUA00001 , 
+	VALUATION_AMOUNT_1 FOR COLUMN VALUA00002 , 
+	VALUATION_AMOUNT_2 FOR COLUMN VALUA00003 , 
+	DELIM , 
+	BLOCKEDACCOUNT FOR COLUMN BLOCK00001 , 
+	REPORTDATE , 
+	IS_DEL , 
+	COR ) 
+	AS 
+	SELECT COR.FILIAL, COR.CNUM, COR.CUSTOMER_NAME, COR.CB_ACCOUNT, COR.COUNTRY, COR.LIMIT_TYPE, COR.VALUATION_CCY, COR.VALUATION_AMOUNT_1, COR.VALUATION_AMOUNT_2, COR.DELIM, COR.BLOCKEDACCOUNT, COR.REPORTDATE, COR.IS_DEL, '1' AS COR FROM DWH.AUDIT00026 COR, DWH.AUDIT00004 ORG WHERE COR.REPORTDATE = ORG.REPORTDATE AND ORG.BLOCKEDACCOUNT = COR.BLOCKEDACCOUNT AND COR.IS_DEL='0' AND ORG.IS_DEL='0' UNION SELECT ORG.FILIAL, ORG.CNUM, ORG.CUSTOMER_NAME, ORG.CB_ACCOUNT, ORG.COUNTRY, ORG.LIMIT_TYPE, ORG.VALUATION_CCY, ORG.VALUATION_AMOUNT_1, ORG.VALUATION_AMOUNT_2, ORG.DELIM, ORG.BLOCKEDACCOUNT, ORG.REPORTDATE, ORG.IS_DEL, '0' AS COR FROM DWH.AUDIT00004 ORG WHERE ORG.IS_DEL='0' AND NOT EXISTS(SELECT COR.BLOCKEDACCOUNT FROM DWH.AUDIT00026 COR WHERE COR.REPORTDATE = ORG.REPORTDATE AND ORG.BLOCKEDACCOUNT = COR.BLOCKEDACCOUNT AND COR.IS_DEL='0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_2_VW ( 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CCODE , 
+	ACC2 , 
+	BSAACID , 
+	ACID , 
+	CNUM , 
+	LN , 
+	GLACOD , 
+	CLIENT_NAME FOR COLUMN CLIEN00001 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	GLCCY , 
+	BAL_ACY , 
+	DISCOUNT , 
+	DISCOUNT_NEXT FOR COLUMN DISCO00001 , 
+	RES_ACCOUNT FOR COLUMN RES_A00001 , 
+	RES_BC , 
+	INTR_BSAACID FOR COLUMN INTR_00001 , 
+	LAST_INTR_DATE FOR COLUMN LAST_00001 , 
+	INTR_CAP , 
+	INTR_RES_ACCOUNT FOR COLUMN INTR_00002 , 
+	INTR_RES_AMOUNT FOR COLUMN INTR_00003 , 
+	TYPE_RESTRICTION FOR COLUMN TYPE_00001 , 
+	AMNT_RESTRICTION FOR COLUMN AMNT_00001 , 
+	PLACEMENT , 
+	IS_DEL , 
+	ACC_OPEN_DATE FOR COLUMN ACC_O00001 , 
+	COR ) 
+	AS 
+	SELECT COR.REPORT_DATE, COR.CCODE, COR.ACC2, COR.BSAACID, COR.ACID, COR.CNUM, COR.LN, COR.GLACOD, COR.CLIENT_NAME, COR.COUNTRY_CODE, COR.CURRENCY_CODE, COR.GLCCY, COR.BAL_ACY, COR.DISCOUNT, COR.DISCOUNT_NEXT, COR.RES_ACCOUNT, COR.RES_BC, COR.INTR_BSAACID, COR.LAST_INTR_DATE, COR.INTR_CAP, COR.INTR_RES_ACCOUNT, COR.INTR_RES_AMOUNT, COR.TYPE_RESTRICTION, COR.AMNT_RESTRICTION, COR.PLACEMENT, COR.IS_DEL, COR.ACC_OPEN_DATE, '1' AS COR FROM DWH.AUDIT00027 COR, DWH.AUDIT00007 ORG WHERE (COR.REPORT_DATE = ORG.REPORT_DATE AND COR.BSAACID = ORG.BSAACID AND COR.IS_DEL='0' AND ORG.IS_DEL='0') UNION SELECT ORG.REPORT_DATE, ORG.CCODE, ORG.ACC2, ORG.BSAACID, ORG.ACID, ORG.CNUM, ORG.LN, ORG.GLACOD, ORG.CLIENT_NAME, ORG.COUNTRY_CODE, ORG.CURRENCY_CODE, ORG.GLCCY, ORG.BAL_ACY, ORG.DISCOUNT, ORG.DISCOUNT_NEXT, ORG.RES_ACCOUNT, ORG.RES_BC, ORG.INTR_BSAACID, ORG.LAST_INTR_DATE, ORG.INTR_CAP, ORG.INTR_RES_ACCOUNT, ORG.INTR_RES_AMOUNT, ORG.TYPE_RESTRICTION, ORG.AMNT_RESTRICTION, ORG.PLACEMENT, ORG.IS_DEL, ORG.ACC_OPEN_DATE, '0' AS COR FROM DWH.AUDIT00007 ORG WHERE ORG.IS_DEL='0' AND NOT EXISTS(SELECT COR.BSAACID FROM DWH.AUDIT00027 COR WHERE COR.REPORT_DATE = ORG.REPORT_DATE AND COR.BSAACID = ORG.BSAACID AND COR.IS_DEL='0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_20_VW ( 
+	ID , 
+	FILIAL_CODE FOR COLUMN FILIA00001 , 
+	DEAL_TYPE , 
+	CB_ACCOUNT , 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CLIENT_NAME FOR COLUMN CLIEN00002 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE_RUR FOR COLUMN BALAN00002 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	FUTURE_INTEREST_RATE FOR COLUMN FUTUR00001 , 
+	FREQ_TERM_INTEREST FOR COLUMN FREQ_00001 , 
+	LAST_INTEREST_DATE FOR COLUMN LAST_00001 , 
+	RISK_GROUP , 
+	REZERV_RATE FOR COLUMN REZER00001 , 
+	RESERVE_ACCOUNT FOR COLUMN RESER00001 , 
+	RESERVE_AMOUNT FOR COLUMN RESER00002 , 
+	INTEREST_ACCOUNT FOR COLUMN INTER00002 , 
+	INTEREST_AMOUNT FOR COLUMN INTER00003 , 
+	ACCOUNT_INTEREST_RESERV FOR COLUMN ACCOU00001 , 
+	AMOUNT_INTEREST_RESERV FOR COLUMN AMOUN00001 , 
+	VALUE_DATE , 
+	ORIG_MATURITY_DATE FOR COLUMN ORIG_00001 , 
+	ROLLOVER_COUNTER FOR COLUMN ROLLO00001 , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00002 , 
+	DELIQUENCY_COUNT FOR COLUMN DELIQ00001 , 
+	COLLATERAL , 
+	MSFO_RESERV FOR COLUMN MSFO_00001 , 
+	BANK_RATING FOR COLUMN BANK_00001 , 
+	FLAG_RELATION_SIDE FOR COLUMN FLAG_00001 , 
+	FLAG_SUBORDINATE_DEPOSIT FOR COLUMN FLAG_00002 , 
+	FLAG_ST , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	DEAL_NUMBER FOR COLUMN DEAL_00001 , 
+	BSS_ACCOUNT FOR COLUMN BSS_A00001 , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	PARENT_CNUM FOR COLUMN PAREN00001 , 
+	IS_DEL , 
+	COR ) 
+	AS 
+	SELECT  
+		 COR.ID,  
+		 COR.FILIAL_CODE,  
+		 COR.DEAL_TYPE,  
+		 COR.CB_ACCOUNT,  
+		 COR.CLIENT_NUMBER,  
+		 COR.CLIENT_NAME,  
+		 COR.COUNTRY_CODE,  
+		 COR.CURRENCY_CODE,  
+		 COR.BALANCE_CUR,  
+		 COR.BALANCE_RUR,  
+		 COR.INTEREST_RATE,  
+		 COR.FUTURE_INTEREST_RATE,  
+		 COR.FREQ_TERM_INTEREST,  
+		 COR.LAST_INTEREST_DATE,  
+		 COR.RISK_GROUP,  
+		 COR.REZERV_RATE,  
+		 COR.RESERVE_ACCOUNT,  
+		 COR.RESERVE_AMOUNT,  
+		 COR.INTEREST_ACCOUNT,  
+		 COR.INTEREST_AMOUNT,  
+		 COR.ACCOUNT_INTEREST_RESERV,  
+		 COR.AMOUNT_INTEREST_RESERV,  
+		 COR.VALUE_DATE,  
+		 COR.ORIG_MATURITY_DATE,  
+		 COR.ROLLOVER_COUNTER,  
+		 COR.LAST_MATURITY_DATE,  
+		 COR.DELIQUENCY_COUNT,  
+		 COR.COLLATERAL,  
+		 COR.MSFO_RESERV,  
+		 COR.BANK_RATING,  
+		 COR.FLAG_RELATION_SIDE,  
+		 COR.FLAG_SUBORDINATE_DEPOSIT,  
+		 COR.FLAG_ST,  
+		 COR.REPORT_DATE,  
+		 COR.DEAL_NUMBER,  
+		 COR.BSS_ACCOUNT,  
+		 COR.MIDAS_ACCOUNT,  
+		 COR.PARENT_CNUM,  
+		 COR.IS_DEL,  
+		 '1' AS COR  
+		 FROM DWH.AUDIT00028 COR, DWH.AUDIT00006 ORG  
+		 WHERE  
+		  --cor.report_date = org.report_date and cor.deal_number = org.deal_number and cor.cb_account = org.cb_account 
+		 COR.ID = ORG.ID  
+		 AND COR.IS_DEL='0' AND ORG.IS_DEL='0'  
+		 UNION  
+		 SELECT  
+		 ORG.ID,  
+		 ORG.FILIAL_CODE,  
+		 ORG.DEAL_TYPE,  
+		 ORG.CB_ACCOUNT,  
+		 ORG.CLIENT_NUMBER,  
+		 ORG.CLIENT_NAME,  
+		 ORG.COUNTRY_CODE,  
+		 ORG.CURRENCY_CODE,  
+		 ORG.BALANCE_CUR,  
+		 ORG.BALANCE_RUR,  
+		 ORG.INTEREST_RATE,  
+		 ORG.FUTURE_INTEREST_RATE,  
+		 ORG.FREQ_TERM_INTEREST,  
+		 ORG.LAST_INTEREST_DATE,  
+		 ORG.RISK_GROUP,  
+		 ORG.REZERV_RATE,  
+		 ORG.RESERVE_ACCOUNT,  
+		 ORG.RESERVE_AMOUNT,  
+		 ORG.INTEREST_ACCOUNT,  
+		 ORG.INTEREST_AMOUNT,  
+		 ORG.ACCOUNT_INTEREST_RESERV,  
+		 ORG.AMOUNT_INTEREST_RESERV,  
+		 ORG.VALUE_DATE,  
+		 ORG.ORIG_MATURITY_DATE,  
+		 ORG.ROLLOVER_COUNTER,  
+		 ORG.LAST_MATURITY_DATE,  
+		 ORG.DELIQUENCY_COUNT,  
+		 ORG.COLLATERAL,  
+		 ORG.MSFO_RESERV,  
+		 ORG.BANK_RATING,  
+		 ORG.FLAG_RELATION_SIDE,  
+		 ORG.FLAG_SUBORDINATE_DEPOSIT,  
+		 ORG.FLAG_ST,  
+		 ORG.REPORT_DATE,  
+		 ORG.DEAL_NUMBER,  
+		 ORG.BSS_ACCOUNT,  
+		 ORG.MIDAS_ACCOUNT,  
+		 ORG.PARENT_CNUM,  
+		 ORG.IS_DEL,  
+		 '0' AS COR  
+		 FROM DWH.AUDIT00006 ORG WHERE ORG.IS_DEL='0' AND NOT EXISTS(SELECT COR.CB_ACCOUNT FROM DWH.AUDIT00028 COR  
+		 WHERE  --cor.report_date = org.report_date and cor.deal_number = org.deal_number and cor.cb_account = org.cb_account 
+		 COR.ID = ORG.ID  
+		 AND COR.IS_DEL='0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_3_VW ( 
+	ID , 
+	FILIAL_CODE FOR COLUMN FILIA00001 , 
+	CLIENT_NAME FOR COLUMN CLIEN00001 , 
+	CLIENT_NUMBER FOR COLUMN CLIEN00002 , 
+	BSS_ACCOUNT FOR COLUMN BSS_A00001 , 
+	CB_ACCOUNT , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	CREDIT_LIMIT FOR COLUMN CREDI00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE_RUR FOR COLUMN BALAN00002 , 
+	VALUE_DATE , 
+	ORIG_MATURITY_DATE FOR COLUMN ORIG_00001 , 
+	PAYMENT_FREQUENCY_IND FOR COLUMN PAYME00001 , 
+	RESTRUCTRE_COUNT FOR COLUMN RESTR00001 , 
+	RESTRUCTRE_CHARACTER FOR COLUMN RESTR00002 , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	START_INTEREST_DATE FOR COLUMN START00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	NEXT_INTEREST_RATE FOR COLUMN NEXT_00001 , 
+	INTEREST_FREQUENCY FOR COLUMN INTER00002 , 
+	INTEREST_ACCOUNT FOR COLUMN INTER00003 , 
+	INTEREST_AMOUNT_CUR FOR COLUMN INTER00004 , 
+	COLLATERAL_TYPE FOR COLUMN COLLA00001 , 
+	RUR_COLLATERAL FOR COLUMN RUR_C00001 , 
+	WEIGHTED_RUR_COLLATERAL FOR COLUMN WEIGH00001 , 
+	COLUMN_26 , 
+	COLUMN_27 , 
+	COLUMN_28 , 
+	LINKEDBANKFLAG FOR COLUMN LINKE00001 , 
+	NUMBERGROUPCLIENT FOR COLUMN NUMBE00001 , 
+	OKVED , 
+	KODL , 
+	FINPOL , 
+	RISK_GROUP , 
+	RESERVE_ACCOUNT FOR COLUMN RESER00001 , 
+	RESERVE , 
+	RESERVE_PCT_ACCOUNT FOR COLUMN RESER00002 , 
+	RESERVE_PCT FOR COLUMN RESER00003 , 
+	COLUMN_39 , 
+	COLUMN_40 , 
+	COLUMN_41 , 
+	COLUMN_42 , 
+	COLUMN_43 , 
+	COLUMN_44 , 
+	COLUMN_45 , 
+	COLUMN_46 , 
+	COLUMN_47 , 
+	COLUMN_48 , 
+	COLUMN_49 , 
+	COLUMN_50 , 
+	COLUMN_51 , 
+	COLUMN_52 , 
+	COLUMN_53 , 
+	COLUMN_54 , 
+	COLUMN_55 , 
+	COLUMN_56 , 
+	COLUMN_57 , 
+	COLUMN_58 , 
+	COLUMN_DELIM FOR COLUMN COLUM00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	RATING , 
+	DEAL_NUMBER FOR COLUMN DEAL_00001 , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	ROLLOVER_COUNTER FOR COLUMN ROLLO00001 , 
+	INTEREST_AMOUNT_RUR_283 FOR COLUMN INTER00005 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 , 
+	IS_DEL , 
+	COR ) 
+	AS 
+	SELECT  
+	  
+	 COR.ID,  
+	  
+	 COR.FILIAL_CODE,  
+	  
+	  
+	  
+	 COR.CLIENT_NAME,  
+	  
+	  
+	  
+	 COR.CLIENT_NUMBER,  
+	  
+	  
+	  
+	 COR.BSS_ACCOUNT,  
+	  
+	  
+	  
+	 COR.CB_ACCOUNT,  
+	  
+	  
+	  
+	 COR.COUNTRY_CODE,  
+	  
+	  
+	  
+	 COR.CURRENCY_CODE,  
+	  
+	  
+	  
+	 COR.CREDIT_LIMIT,  
+	  
+	  
+	  
+	 COR.BALANCE_CUR,  
+	  
+	  
+	  
+	 COR.BALANCE_RUR,  
+	  
+	  
+	  
+	 COR.VALUE_DATE,  
+	  
+	  
+	  
+	 COR.ORIG_MATURITY_DATE,  
+	  
+	  
+	  
+	 COR.PAYMENT_FREQUENCY_IND,  
+	  
+	  
+	  
+	 COR.RESTRUCTRE_COUNT,  
+	  
+	  
+	  
+	 COR.RESTRUCTRE_CHARACTER,  
+	  
+	  
+	  
+	 COR.LAST_MATURITY_DATE,  
+	  
+	  
+	  
+	 COR.START_INTEREST_DATE,  
+	  
+	  
+	  
+	 COR.INTEREST_RATE,  
+	  
+	  
+	  
+	 COR.NEXT_INTEREST_RATE,  
+	  
+	  
+	  
+	 COR.INTEREST_FREQUENCY,  
+	  
+	  
+	  
+	 COR.INTEREST_ACCOUNT,  
+	  
+	  
+	  
+	 COR.INTEREST_AMOUNT_CUR,  
+	  
+	  
+	  
+	 COR.COLLATERAL_TYPE,  
+	  
+	  
+	  
+	 COR.RUR_COLLATERAL,  
+	  
+	  
+	  
+	 COR.WEIGHTED_RUR_COLLATERAL,  
+	  
+	  
+	  
+	 COR.COLUMN_26,  
+	  
+	  
+	  
+	 COR.COLUMN_27,  
+	  
+	  
+	  
+	 COR.COLUMN_28,  
+	  
+	  
+	  
+	 COR.LINKEDBANKFLAG,  
+	  
+	  
+	  
+	 COR.NUMBERGROUPCLIENT,  
+	  
+	  
+	  
+	 COR.OKVED,  
+	  
+	  
+	  
+	 COR.KODL,  
+	  
+	  
+	  
+	 COR.FINPOL,  
+	  
+	  
+	  
+	 COR.RISK_GROUP,  
+	  
+	  
+	  
+	 COR.RESERVE_ACCOUNT,  
+	  
+	  
+	  
+	 COR.RESERVE,  
+	  
+	  
+	  
+	 COR.RESERVE_PCT_ACCOUNT,  
+	  
+	  
+	  
+	 COR.RESERVE_PCT,  
+	  
+	  
+	  
+	 COR.COLUMN_39,  
+	  
+	  
+	  
+	 COR.COLUMN_40,  
+	  
+	  
+	  
+	 COR.COLUMN_41,  
+	  
+	  
+	  
+	 COR.COLUMN_42,  
+	  
+	  
+	  
+	 COR.COLUMN_43,  
+	  
+	  
+	  
+	 COR.COLUMN_44,  
+	  
+	  
+	  
+	 COR.COLUMN_45,  
+	  
+	  
+	  
+	 COR.COLUMN_46,  
+	  
+	  
+	  
+	 COR.COLUMN_47,  
+	  
+	  
+	  
+	 COR.COLUMN_48,  
+	  
+	  
+	  
+	 COR.COLUMN_49,  
+	  
+	  
+	  
+	 COR.COLUMN_50,  
+	  
+	  
+	  
+	 COR.COLUMN_51,  
+	  
+	  
+	  
+	 COR.COLUMN_52,  
+	  
+	  
+	  
+	 COR.COLUMN_53,  
+	  
+	  
+	  
+	 COR.COLUMN_54,  
+	  
+	  
+	  
+	 COR.COLUMN_55,  
+	  
+	  
+	  
+	 COR.COLUMN_56,  
+	  
+	  
+	  
+	 COR.COLUMN_57,  
+	  
+	  
+	  
+	 COR.COLUMN_58,  
+	  
+	  
+	  
+	 COR.COLUMN_DELIM,  
+	  
+	  
+	  
+	 COR.REPORT_DATE,  
+	  
+	  
+	  
+	 COR.RATING,  
+	  
+	  
+	  
+	 COR.DEAL_NUMBER,  
+	  
+	  
+	  
+	 COR.MIDAS_ACCOUNT,  
+	  
+	  
+	  
+	 COR.ROLLOVER_COUNTER,  
+	  
+	  
+	  
+	 COR.INTEREST_AMOUNT_RUR_283,  
+	  
+	  
+	  
+	 COR.AGREEMENT_NUMBER, 
+	  
+	  
+	  
+	 COR.AGREEMENT_DATE, 
+	  
+	  
+	  
+	 COR.IS_DEL,  
+	  
+	  
+	  
+	 '1' AS COR  
+	  
+	  
+	  
+	 FROM DWH.AUDIT00030 COR, DWH.AUDIT00010 ORG  
+	  
+	  
+	  
+	 WHERE (  --COR.REPORT_DATE  = ORG.REPORT_DATE AND COR.DEAL_NUMBER = ORG.DEAL_NUMBER AND COR.CB_ACCOUNT  = ORG.CB_ACCOUNT 
+	 COR.ID = ORG.ID  
+	  
+	 AND COR.IS_DEL='0' AND ORG.IS_DEL='0')  
+	  
+	  
+	  
+	 UNION  
+	  
+	  
+	  
+	 SELECT  
+	  
+	 ORG.ID,  
+	  
+	 ORG.FILIAL_CODE,  
+	  
+	  
+	  
+	 ORG.CLIENT_NAME,  
+	  
+	  
+	  
+	 ORG.CLIENT_NUMBER,  
+	  
+	  
+	  
+	 ORG.BSS_ACCOUNT,  
+	  
+	  
+	  
+	 ORG.CB_ACCOUNT,  
+	  
+	  
+	  
+	 ORG.COUNTRY_CODE,  
+	  
+	  
+	  
+	 ORG.CURRENCY_CODE,  
+	  
+	  
+	  
+	 ORG.CREDIT_LIMIT,  
+	  
+	  
+	  
+	 ORG.BALANCE_CUR,  
+	  
+	  
+	  
+	 ORG.BALANCE_RUR,  
+	  
+	  
+	  
+	 ORG.VALUE_DATE,  
+	  
+	  
+	  
+	 ORG.ORIG_MATURITY_DATE,  
+	  
+	  
+	  
+	 ORG.PAYMENT_FREQUENCY_IND,  
+	  
+	  
+	  
+	 ORG.RESTRUCTRE_COUNT,  
+	  
+	  
+	  
+	 ORG.RESTRUCTRE_CHARACTER,  
+	  
+	  
+	  
+	 ORG.LAST_MATURITY_DATE,  
+	  
+	  
+	  
+	 ORG.START_INTEREST_DATE,  
+	  
+	  
+	  
+	 ORG.INTEREST_RATE,  
+	  
+	  
+	  
+	 ORG.NEXT_INTEREST_RATE,  
+	  
+	  
+	  
+	 ORG.INTEREST_FREQUENCY,  
+	  
+	  
+	  
+	 ORG.INTEREST_ACCOUNT,  
+	  
+	  
+	  
+	 ORG.INTEREST_AMOUNT_CUR,  
+	  
+	  
+	  
+	 ORG.COLLATERAL_TYPE,  
+	  
+	  
+	  
+	 ORG.RUR_COLLATERAL,  
+	ORG.WEIGHTED_RUR_COLLATERAL,  
+	 ORG.COLUMN_26,  
+	ORG.COLUMN_27,  
+	 ORG.COLUMN_28,  
+	ORG.LINKEDBANKFLAG,  
+	ORG.NUMBERGROUPCLIENT,  
+	 ORG.OKVED,  
+	ORG.KODL,  
+	 ORG.FINPOL,  
+	 ORG.RISK_GROUP,  
+	 ORG.RESERVE_ACCOUNT,  
+	 ORG.RESERVE,  
+	 ORG.RESERVE_PCT_ACCOUNT,  
+	 ORG.RESERVE_PCT,  
+	 ORG.COLUMN_39,  
+	 ORG.COLUMN_40,  
+	 ORG.COLUMN_41,  
+	 ORG.COLUMN_42,  
+	 ORG.COLUMN_43,  
+	 ORG.COLUMN_44,  
+	 ORG.COLUMN_45,  
+	 ORG.COLUMN_46,  
+	 ORG.COLUMN_47,  
+	 ORG.COLUMN_48,  
+	 ORG.COLUMN_49,  
+	 ORG.COLUMN_50,  
+	 ORG.COLUMN_51,  
+	 ORG.COLUMN_52,  
+	 ORG.COLUMN_53,  
+	 ORG.COLUMN_54,  
+	 ORG.COLUMN_55,  
+	 ORG.COLUMN_56,  
+	 ORG.COLUMN_57,  
+	 ORG.COLUMN_58,  
+	 ORG.COLUMN_DELIM,  
+	 ORG.REPORT_DATE,  
+	 ORG.RATING,  
+	 ORG.DEAL_NUMBER,  
+	 ORG.MIDAS_ACCOUNT,  
+	 ORG.ROLLOVER_COUNTER,  
+	 ORG.INTEREST_AMOUNT_RUR_283,  
+	 ORG.AGREEMENT_NUMBER, 
+	 ORG.AGREEMENT_DATE, 
+	 ORG.IS_DEL,  
+	 '0' AS COR  
+	 FROM DWH.AUDIT00010 ORG  
+	 WHERE ORG.IS_DEL='0' AND NOT EXISTS(SELECT ORG.CB_ACCOUNT FROM DWH.AUDIT00030 COR  
+	 WHERE  -- COR.REPORT_DATE  = ORG.REPORT_DATE AND COR.DEAL_NUMBER = ORG.DEAL_NUMBER AND COR.CB_ACCOUNT  = ORG.CB_ACCOUNT 
+	 COR.ID = ORG.ID  
+	 AND COR.IS_DEL='0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_4_VW ( 
+	BRANCH , 
+	ACCOUNTCB , 
+	ACCNAME , 
+	CURRENCY , 
+	OSTATOKKREDITLINIA FOR COLUMN OSTAT00001 , 
+	KRLINIAVALUTA FOR COLUMN KRLIN00001 , 
+	EXPIRYDATE , 
+	OTZYVNOY , 
+	MIDAS_ACC , 
+	SUMMARESERVA FOR COLUMN SUMMA00001 , 
+	SEP , 
+	RBRANCH , 
+	RCUSTOMER , 
+	RACCCODE , 
+	RSEQ , 
+	CUSTOMER , 
+	ACCCODE , 
+	RCODECB , 
+	"SEQUENCE" , 
+	REPORTDATE , 
+	OPEN_DATE , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 , 
+	COR , 
+	IS_DEL ) 
+	AS 
+	SELECT COR.BRANCH,  
+	 COR.ACCOUNTCB,  
+	 COR.ACCNAME,  
+	 COR.CURRENCY,  
+	 COR.OSTATOKKREDITLINIA,  
+	 COR.KRLINIAVALUTA,  
+	 COR.EXPIRYDATE,  
+	 COR.OTZYVNOY,  
+	 COR.MIDAS_ACC,  
+	 COR.SUMMARESERVA,  
+	 COR.SEP,  
+	 COR.RBRANCH,  
+	 COR.RCUSTOMER,  
+	 COR.RACCCODE,  
+	 COR.RSEQ,  
+	 COR.CUSTOMER,  
+	 COR.ACCCODE,  
+	 COR.RCODECB,  
+	 COR.SEQUENCE,  
+	 COR.REPORTDATE,  
+	 COR.OPEN_DATE,  
+	 COR.AGREEMENT_NUMBER, 
+	 COR.AGREEMENT_DATE, 
+	 '1' AS COR,  
+	 COR.IS_DEL  
+	 FROM DWH.AUDIT00033 COR,  
+	 DWH.AUDIT00008 ORG  
+	 WHERE (COR.REPORTDATE = ORG.REPORTDATE  
+	 AND COR.ACCOUNTCB = ORG.ACCOUNTCB  
+	 AND COR.IS_DEL = '0'  
+	 AND ORG.IS_DEL = '0')  
+	 UNION  
+	 SELECT ORG.BRANCH,  
+	 ORG.ACCOUNTCB,  
+	 ORG.ACCNAME,  
+	 ORG.CURRENCY,  
+	 ORG.OSTATOKKREDITLINIA,  
+	 ORG.KRLINIAVALUTA,  
+	 ORG.EXPIRYDATE,  
+	 ORG.OTZYVNOY,  
+	 ORG.MIDAS_ACC,  
+	 ORG.SUMMARESERVA,  
+	 ORG.SEP,  
+	 ORG.RBRANCH,  
+	 ORG.RCUSTOMER,  
+	 ORG.RACCCODE,  
+	 ORG.RSEQ,  
+	 ORG.CUSTOMER,  
+	 ORG.ACCCODE,  
+	 ORG.RCODECB,  
+	 ORG.SEQUENCE,  
+	 ORG.REPORTDATE,  
+	 ORG.OPEN_DATE,  
+	 ORG.AGREEMENT_NUMBER, 
+	 ORG.AGREEMENT_DATE, 
+	 '0' AS COR,  
+	 ORG.IS_DEL  
+	 FROM DWH.AUDIT00008 ORG  
+	 WHERE ORG.IS_DEL = '0'  
+	 AND NOT EXISTS (SELECT COR.ACCOUNTCB  
+	 FROM DWH.AUDIT00033 COR  
+	 WHERE COR.REPORTDATE = ORG.REPORTDATE  
+	 AND COR.ACCOUNTCB = ORG.ACCOUNTCB  
+	 AND COR.IS_DEL = '0') ; 
+  
+CREATE VIEW DWH.AUDIT_APPLICATION_GLC_VW ( 
+	ID , 
+	CODECB , 
+	CURRENCYCB , 
+	KEYCB , 
+	BRANCHCB , 
+	ANALYTCB , 
+	CUSTOMER , 
+	CURRENCY , 
+	ACCCODE , 
+	"SEQUENCE" , 
+	BRANCH , 
+	ACCNAME , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE_RUR FOR COLUMN BALAN00002 , 
+	DEAL_NUMBER FOR COLUMN DEAL_00001 , 
+	OPEN_DATE , 
+	END_DATE , 
+	INDICATION_COVERAGE FOR COLUMN INDIC00001 , 
+	RESIDENCE , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT COR.ID, 
+	 COR.CODECB,  
+			COR.CURRENCYCB,  
+			COR.KEYCB,  
+			COR.BRANCHCB,  
+			COR.ANALYTCB,  
+			COR.CUSTOMER,  
+			COR.CURRENCY,  
+			COR.ACCCODE,  
+			COR.SEQUENCE, 
+			COR.BRANCH,  
+			COR.ACCNAME,  
+			COR.BALANCE_CUR,  
+			COR.BALANCE_RUR,  
+			COR.DEAL_NUMBER,  
+			COR.OPEN_DATE,  
+			COR.END_DATE,  
+			COR.INDICATION_COVERAGE,  
+			COR.RESIDENCE,  
+			COR.REPORT_DATE 
+	 FROM DWH.AUDIT00045 COR  
+	 JOIN DWH.AUDIT00040 ORG 
+	 ON COR.ID = ORG.ID 
+	 AND COR.IS_DEL = '0' 
+	 AND ORG.IS_DEL = '0' 
+	UNION ALL 
+	SELECT ORG.ID, 
+	 ORG.CODECB,  
+			ORG.CURRENCYCB,  
+			ORG.KEYCB,  
+			ORG.BRANCHCB,  
+			ORG.ANALYTCB,  
+			ORG.CUSTOMER,  
+			ORG.CURRENCY,  
+			ORG.ACCCODE,  
+			ORG.SEQUENCE, 
+			ORG.BRANCH,  
+			ORG.ACCNAME,  
+			ORG.BALANCE_CUR,  
+			ORG.BALANCE_RUR,  
+			ORG.DEAL_NUMBER,  
+			ORG.OPEN_DATE,  
+			ORG.END_DATE,  
+			ORG.INDICATION_COVERAGE,  
+			ORG.RESIDENCE,  
+			ORG.REPORT_DATE 
+	 FROM DWH.AUDIT00040 ORG 
+	 WHERE ORG.IS_DEL = '0' 
+	 AND NOT EXISTS (SELECT * 
+	 FROM DWH.AUDIT00045 COR 
+	 WHERE COR.ID = ORG.ID 
+	 AND COR.IS_DEL = '0') ; 
+  
+CREATE VIEW DWH.AUDIT_CLIENT_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	PR2 , 
+	PR3 , 
+	PR4 , 
+	PRACC , 
+	PRGLC , 
+	PR13 , 
+	PR14 , 
+	PR20 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_ADRESS FOR COLUMN CUSTO00002 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00003 , 
+	OWNERSHIP_TYPE FOR COLUMN OWNER00001 , 
+	RESIDENCE , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	FAX_NUMBER , 
+	EMAIL , 
+	ACC_OFFICER_NAME FOR COLUMN ACC_O00001 , 
+	DAT , 
+	DAT_ , 
+	IS_DEL , 
+	COR ) 
+	AS 
+	SELECT  
+	CL."CLIENT_NUMBER", 
+	CL."PR2", 
+	CL."PR3", 
+	CL."PR4", 
+	CL."PRACC", 
+	CL."PRGLC", 
+	CL."PR13", 
+	CL."PR14", 
+	CL."PR20", 
+	IFNULL (ADDR."CUSTOMER_NAME", S.BXRUNM), 
+	IFNULL (ADDR."CUSTOMER_ADRESS", S.BXADDR), 
+	IFNULL (ADDR."CUSTOMER_POSTADRESS", 
+	CASE WHEN S.RECD = 'R' THEN(SELECT V.BXPSAD FROM DWH.SDCUSTPD V WHERE V.BBCUST = CL.CLIENT_NUMBER) 
+	ELSE(SELECT V.BBCNA1 || V.BBCNA2 || V.BBCNA3 FROM DWH.SDCUSTPD V WHERE V.BBCUST = CL.CLIENT_NUMBER)END) 
+	AS "CUSTOMER_POSTADRESS", /*IFNULL(addr."CUSTOMER_POSTADRESS", s.BXPSAD), */ 
+	IFNULL (ADDR."OWNERSHIP_TYPE", S.BXCTYP), 
+	IFNULL (ADDR."RESIDENCE", S.RECD), 
+	IFNULL (ADDR."PHONE_NUMBER", ''), 
+	IFNULL (ADDR."EMAIL", (SELECT AO.EMAIL FROM DWH.AUDIT00043 AO JOIN DWH.SDCUSTPD S 
+	ON AO.BBACOC = S.BBACOC AND S.BBCUST = ADDR.CLIENT_NUMBER)), 
+	IFNULL (ADDR."ACC_OFFICER_NAME", (SELECT AO.ACC_OFFICER_CODE FROM DWH.AUDIT00043 AO JOIN DWH.SDCUSTPD S 
+	 ON AO.BBACOC = S.BBACOC AND S.BBCUST = ADDR.CLIENT_NUMBER)), 
+	ADDR."FAX_NUMBER", 
+	CL.DAT, 
+	DWH.D2S (CL.DAT), 
+	CL.IS_DEL, 
+	'1' AS COR 
+	FROM DWH.AUDIT00013 ADDR, DWH.AUDIT00011 CL, DWH.SDCUSTPD S 
+	WHERE CL.CLIENT_NUMBER = ADDR.CLIENT_NUMBER 
+	AND S.BBCUST = ADDR.CLIENT_NUMBER AND CL.IS_DEL = '0'AND ADDR.IS_DEL = '0' 
+	UNION 
+	SELECT  
+	CL2."CLIENT_NUMBER", 
+	CL2."PR2", 
+	CL2."PR3", 
+	CL2."PR4", 
+	CL2."PRACC", 
+	CL2."PRGLC", 
+	CL2."PR13", 
+	CL2."PR14", 
+	CL2."PR20", 
+	S.BXRUNM AS "CUSTOMER_NAME", 
+	S.BXADDR AS "CUSTOMER_ADRESS", 
+	CASE WHEN S.RECD = 'R'THEN(SELECT V.BXPSAD FROM DWH.SDCUSTPD V WHERE V.BBCUST = CL2.CLIENT_NUMBER) 
+	ELSE(SELECT V.BBCNA1 || V.BBCNA2 || V.BBCNA3 FROM DWH.SDCUSTPD V WHERE V.BBCUST = CL2.CLIENT_NUMBER) 
+	END AS "CUSTOMER_POSTADRESS", /*s.BXPSAD as  "CUSTOMER_POSTADRESS", */ 
+	S.BXCTYP AS "OWNERSHIP_TYPE", 
+	S.RECD AS "RESIDENCE", 
+	'' AS "PHONE_NUMBER", 
+	IFNULL ((SELECT AO.EMAIL FROM DWH.AUDIT00043 AO JOIN DWH.SDCUSTPD S 
+	ON AO.BBACOC = S.BBACOC AND S.BBCUST = CL2.CLIENT_NUMBER),'' ) AS EMAIL , 
+	IFNULL ((SELECT AO.ACC_OFFICER_CODE FROM DWH.AUDIT00043 AO JOIN DWH.SDCUSTPD S 
+	 ON AO.BBACOC = S.BBACOC AND S.BBCUST = CL2.CLIENT_NUMBER),'' ) AS ACC_OFFICER_NAME, 
+	'' AS "FAX_NUMBER", 
+	CL2.DAT, 
+	DWH.D2S (CL2.DAT), 
+	CL2.IS_DEL, 
+	'0' AS COR 
+	FROM DWH.AUDIT00011 CL2, DWH.SDCUSTPD S 
+	WHERE CL2.IS_DEL = '0' AND CL2.CLIENT_NUMBER = S.BBCUST 
+	AND NOT EXISTS(SELECT 1 FROM DWH.AUDIT00013 ADDR2 
+	WHERE CL2.CLIENT_NUMBER = ADDR2.CLIENT_NUMBER 
+	AND CL2.IS_DEL = '0' AND ADDR2.IS_DEL = '0') ; 
+  
+LABEL ON COLUMN DWH.AUDIT_CLIENT_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	PR2 IS 'APPLICATION N2' , 
+	PR3 IS 'APPLICATION N3' , 
+	PR4 IS 'APPLICATION N4' , 
+	PR13 IS 'APPLICATION N13' , 
+	PR14 IS 'APPLICATION N14' , 
+	PR20 IS 'APPLICATION N20' , 
+	DAT IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_3_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	COLLATERAL_TYPE FOR COLUMN COLLA00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT  
+	CLIENT_NUMBER, 
+	CURRENCY_CODE, 
+	BALANCE_CUR, 
+	BALANCE, 
+	CASE WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)>9 THEN DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)<10 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)<10 THEN DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)>9 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=1 THEN DAY(LAST_MATURITY_DATE)||' '||'January'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=2 THEN DAY(LAST_MATURITY_DATE)||' '||'February'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=3 THEN DAY(LAST_MATURITY_DATE)||' '||'March'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=4 THEN DAY(LAST_MATURITY_DATE)||' '||'April'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=5 THEN DAY(LAST_MATURITY_DATE)||' '||'May'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                                	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=6 THEN DAY(LAST_MATURITY_DATE)||' '||'June'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=7 THEN DAY(LAST_MATURITY_DATE)||' '||'July'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=8 THEN DAY(LAST_MATURITY_DATE)||' '||'August'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=9 THEN DAY(LAST_MATURITY_DATE)||' '||'September'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=10 THEN DAY(LAST_MATURITY_DATE)||' '||'October'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=11 THEN DAY(LAST_MATURITY_DATE)||' '||'November'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=12 THEN DAY(LAST_MATURITY_DATE)||' '||'December'||' '||YEAR(LAST_MATURITY_DATE) END LAST_MATURITY_DATE,  
+                                                                                                                                                                                                                                                                                                                                                 	INTEREST_RATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  	COLLATERAL_TYPE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                	REPORT_DATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    	AGREEMENT_NUMBER, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               	AGREEMENT_DATE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 	FROM DWH.AUDIT00055 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             	WHERE (SUBSTR(MIDAS_ACCOUNT,12,4) NOT IN ('1401','1402','1403','1404','1405','1406')) ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_3_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 , 
+	T_6 , 
+	T_7 , 
+	T_8 ) 
+	AS 
+	SELECT  
+	 CLIENT_NUMBER, 
+	REPORT_DATE, 
+	CUSTOMER_NAME, 
+	CUSTOMER_POSTADRESS, 
+	PHONE_NUMBER, 
+	LANG, 
+	TXT_CL_NUM, 
+	TXT_CL_TEL, 
+	PARAG_1, 
+	PARAG_2, 
+	PARAG_3, 
+	PARAG_4, 
+	PARAG_5, 
+	PARAG_6, 
+	PARAG_7, 
+	PARAG_8, 
+	PARAG_9, 
+	PARAG_10, 
+	PARAG_11, 
+	PARAG_12, 
+	PARAG_13, 
+	PARAG_14, 
+	PARAG_15, 
+	PARAG_16, 
+	PARAG_17, 
+	T_1, 
+	T_2, 
+	T_3, 
+	T_4, 
+	T_5, 
+	T_6, 
+	T_7, 
+	T_8 
+	FROM DWH.AUDIT00062 
+	WHERE CLIENT_NUMBER IN ( SELECT AC.CLIENT_NUMBER FROM DWH.AUDIT00055 AC WHERE SUBSTR(AC.MIDAS_ACCOUNT,12,4) NOT IN ('1401','1402','1403','1404','1405','1406') GROUP BY AC.CLIENT_NUMBER ) ; 
+  
+LABEL ON COLUMN DWH.AUDIT_CREDIT_3_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_3_VW ( 
+	ID , 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CB_ACCOUNT , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	DEAL_NUMBER FOR COLUMN DEAL_00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE , 
+	VALUE_DATE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	INTEREST_AMOUNT_CUR FOR COLUMN INTER00002 , 
+	COLLATERAL_TYPE FOR COLUMN COLLA00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT APP.ID,  
+	 APP.CLIENT_NUMBER,  
+	 APP.CB_ACCOUNT,  
+	 APP.MIDAS_ACCOUNT,  
+	 APP.COUNTRY_CODE,  
+	 APP.CURRENCY_CODE,  
+	 APP.DEAL_NUMBER,  
+	 CASE WHEN SUBSTR (APP.CB_ACCOUNT, 1, 5) IN ('32001', '32101', '44201', '44301', '44401', '44501', '44601', '44701', '44801', '44901', '45001', '45101', '45201', '45301', '45401', '45509', '45608', '45708') THEN APP.CREDIT_LIMIT ELSE APP.BALANCE_CUR END BALANCE_CUR,  
+	 APP.BALANCE_CUR AS BALANCE,  
+	 APP.VALUE_DATE,  
+	 APP.LAST_MATURITY_DATE,  
+	 APP.INTEREST_RATE,  
+	 CASE WHEN APP.RISK_GROUP NOT IN ('4', '5') THEN APP.INTEREST_AMOUNT_CUR WHEN APP.RISK_GROUP IN ('4', '5') AND APP.INTEREST_AMOUNT_CUR = (SELECT MAX (INTEREST_AMOUNT_CUR) FROM DWH.AUDIT00010 WHERE CLIENT_NUMBER = APP.CLIENT_NUMBER AND CB_ACCOUNT = APP.CB_ACCOUNT AND REPORT_DATE = APP.REPORT_DATE AND DEAL_NUMBER = APP.DEAL_NUMBER) THEN NULL ELSE APP.INTEREST_AMOUNT_CUR END INTEREST_AMOUNT_CUR,  
+	 APP.COLLATERAL_TYPE,  
+	 APP.REPORT_DATE, 
+	 APP.AGREEMENT_NUMBER,  
+	 APP.AGREEMENT_DATE  
+	 FROM DWH.AUDIT00009 CL JOIN DWH.AUDIT00036 APP ON CL.DAT = APP.REPORT_DATE AND CL.CLIENT_NUMBER = APP.CLIENT_NUMBER WHERE CL.PR3 = '1' ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_ALL_3_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	COLLATERAL_TYPE FOR COLUMN COLLA00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT  
+	CLIENT_NUMBER, 
+	CURRENCY_CODE, 
+	BALANCE_CUR, 
+	BALANCE, 
+	CASE WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)>9 THEN DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)<10 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)<10 THEN DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)>9 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=1 THEN DAY(LAST_MATURITY_DATE)||' '||'January'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=2 THEN DAY(LAST_MATURITY_DATE)||' '||'February'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=3 THEN DAY(LAST_MATURITY_DATE)||' '||'March'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=4 THEN DAY(LAST_MATURITY_DATE)||' '||'April'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=5 THEN DAY(LAST_MATURITY_DATE)||' '||'May'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                                	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=6 THEN DAY(LAST_MATURITY_DATE)||' '||'June'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=7 THEN DAY(LAST_MATURITY_DATE)||' '||'July'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=8 THEN DAY(LAST_MATURITY_DATE)||' '||'August'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=9 THEN DAY(LAST_MATURITY_DATE)||' '||'September'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=10 THEN DAY(LAST_MATURITY_DATE)||' '||'October'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=11 THEN DAY(LAST_MATURITY_DATE)||' '||'November'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=12 THEN DAY(LAST_MATURITY_DATE)||' '||'December'||' '||YEAR(LAST_MATURITY_DATE) END LAST_MATURITY_DATE,  
+                                                                                                                                                                                                                                                                                                                                                 	INTEREST_RATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  	COLLATERAL_TYPE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                	REPORT_DATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    	AGREEMENT_NUMBER, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               	AGREEMENT_DATE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 	FROM DWH.AUDIT00055 ; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                CREATE VIEW DWH.AUDIT_CREDIT_ALL_3_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 , 
+	T_6 , 
+	T_7 , 
+	T_8 ) 
+	AS 
+	SELECT  
+	 CL.CLIENT_NUMBER, 
+	 CL.DAT, 
+	 CASE WHEN CL.CUSTOMER_NAME<>(SELECT BXRUNM FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) THEN CL.CUSTOMER_NAME WHEN CL.RESIDENCE<>'R' THEN (SELECT BBCNA1 FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) ELSE CL.CUSTOMER_NAME END CUSTOMER_NAME ,CASE WHEN CL.CUSTOMER_POSTADRESS IS NULL THEN CUSTOMER_ADRESS ELSE CL.CUSTOMER_POSTADRESS END CUSTOMER_POSTADRESS ,  
+	 CL.PHONE_NUMBER, 
+	 CASE WHEN CL.RESIDENCE='R' THEN 'RUS' ELSE 'N' END LANG , 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_NUM' AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_NUM, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_TEL' AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_TEL, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=1 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_1, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=2 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_2, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=3 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_3, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=4 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_4, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=5 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_5, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=6 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_6, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=7 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_7, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=8 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_8, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=9 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_9, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=10 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_10, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=11 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_11, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=12 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_12, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=13 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_13, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=14 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_14, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=15 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_15, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=16 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_16, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=17 AND TXT.ID=3 AND TXT.LANG=CL.RESIDENCE ) END PARAG_17, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=1 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_1, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=2 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_2, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=3 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_3, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=4 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_4, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=5 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_5, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=6 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_6, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=7 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_7, 
+	 CASE WHEN CL.PR3='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=8 AND TAB.ID=3 AND TAB.LANG=CL.RESIDENCE ) END T_8 
+	 FROM DWH.AUDIT00009 CL 
+	WHERE CL.PR3='1' ; 
+  
+LABEL ON COLUMN DWH.AUDIT_CREDIT_ALL_3_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_SIN_3_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	BALANCE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	COLLATERAL_TYPE FOR COLUMN COLLA00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT  
+	CLIENT_NUMBER, 
+	CURRENCY_CODE, 
+	BALANCE_CUR, 
+	BALANCE, 
+	CASE WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)>9 THEN DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)<10 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)<10 THEN DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)>9 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE) 
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=1 THEN DAY(LAST_MATURITY_DATE)||' '||'January'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=2 THEN DAY(LAST_MATURITY_DATE)||' '||'February'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=3 THEN DAY(LAST_MATURITY_DATE)||' '||'March'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=4 THEN DAY(LAST_MATURITY_DATE)||' '||'April'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=5 THEN DAY(LAST_MATURITY_DATE)||' '||'May'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                                	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=6 THEN DAY(LAST_MATURITY_DATE)||' '||'June'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=7 THEN DAY(LAST_MATURITY_DATE)||' '||'July'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=8 THEN DAY(LAST_MATURITY_DATE)||' '||'August'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=9 THEN DAY(LAST_MATURITY_DATE)||' '||'September'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=10 THEN DAY(LAST_MATURITY_DATE)||' '||'October'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=11 THEN DAY(LAST_MATURITY_DATE)||' '||'November'||' '||YEAR(LAST_MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=12 THEN DAY(LAST_MATURITY_DATE)||' '||'December'||' '||YEAR(LAST_MATURITY_DATE) END LAST_MATURITY_DATE,  
+                                                                                                                                                                                                                                                                                                                                                 	INTEREST_RATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  	COLLATERAL_TYPE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                	REPORT_DATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    	AGREEMENT_NUMBER, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               	AGREEMENT_DATE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 	FROM DWH.AUDIT00055 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             	WHERE (SUBSTR(MIDAS_ACCOUNT,12,4) IN ('1401','1402','1403','1404','1405','1406')) ; 
+  
+CREATE VIEW DWH.AUDIT_CREDIT_SIN_3_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 , 
+	T_6 , 
+	T_7 , 
+	T_8 ) 
+	AS 
+	SELECT  
+	 CLIENT_NUMBER, 
+	REPORT_DATE, 
+	CUSTOMER_NAME, 
+	CUSTOMER_POSTADRESS, 
+	PHONE_NUMBER, 
+	LANG, 
+	TXT_CL_NUM, 
+	TXT_CL_TEL, 
+	PARAG_1, 
+	PARAG_2, 
+	PARAG_3, 
+	PARAG_4, 
+	PARAG_5, 
+	PARAG_6, 
+	PARAG_7, 
+	PARAG_8, 
+	PARAG_9, 
+	PARAG_10, 
+	PARAG_11, 
+	PARAG_12, 
+	PARAG_13, 
+	PARAG_14, 
+	PARAG_15, 
+	PARAG_16, 
+	PARAG_17, 
+	T_1, 
+	T_2, 
+	T_3, 
+	T_4, 
+	T_5, 
+	T_6, 
+	T_7, 
+	T_8 
+	FROM DWH.AUDIT00062 
+	WHERE CLIENT_NUMBER IN ( SELECT AC.CLIENT_NUMBER FROM DWH.AUDIT00055 AC WHERE SUBSTR(AC.MIDAS_ACCOUNT,12,4) IN ('1401','1402','1403','1404','1405','1406') GROUP BY AC.CLIENT_NUMBER ) ; 
+  
+LABEL ON COLUMN DWH.AUDIT_CREDIT_SIN_3_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_DATE_LD_VW ( 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	REPORT_DATE_ FOR COLUMN REPOR00002 , 
+	STATUS , 
+	TIME_START , 
+	TIME_END ) 
+	AS 
+	SELECT 	REPORT_DATE, 	DWH.D2S(REPORT_DATE), 	STATUS , 	TIME_START , 	TIME_END 	FROM 	DWH.AUDIT00012 ; 
+  
+CREATE VIEW DWH.AUDIT_DEPOSIT_13_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CB_ACCOUNT , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	MATURITY_DATE FOR COLUMN MATUR00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT  
+	 APP.CLIENT_NUMBER, 
+	 APP.CB_ACCOUNT, 
+	 APP.CURRENCY_CODE, 
+	 APP.BALANCE_CUR, 
+	 CASE WHEN APP.COUNTRY_CODE='RU' AND DAY(APP.MATURITY_DATE)>9 AND MONTH(APP.MATURITY_DATE)>9 THEN DAY(APP.MATURITY_DATE)||'.'||MONTH(APP.MATURITY_DATE)||'.'||YEAR(APP.MATURITY_DATE) 
+	 WHEN APP.COUNTRY_CODE='RU' AND DAY(APP.MATURITY_DATE)<10 AND MONTH(APP.MATURITY_DATE)<10 THEN '0'||DAY(APP.MATURITY_DATE)||'.'||'0'||MONTH(APP.MATURITY_DATE)||'.'||YEAR(APP.MATURITY_DATE) 
+	 WHEN APP.COUNTRY_CODE='RU' AND DAY(APP.MATURITY_DATE)>9 AND MONTH(APP.MATURITY_DATE)<10 THEN DAY(APP.MATURITY_DATE)||'.'||'0'||MONTH(APP.MATURITY_DATE)||'.'||YEAR(APP.MATURITY_DATE) 
+	 WHEN APP.COUNTRY_CODE='RU' AND DAY(APP.MATURITY_DATE)<10 AND MONTH(APP.MATURITY_DATE)>9 THEN '0'||DAY(APP.MATURITY_DATE)||'.'||MONTH(APP.MATURITY_DATE)||'.'||YEAR(APP.MATURITY_DATE) 
+	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=1 THEN DAY(APP.MATURITY_DATE)||' '||'January'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=2 THEN DAY(APP.MATURITY_DATE)||' '||'February'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=3 THEN DAY(APP.MATURITY_DATE)||' '||'March'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=4 THEN DAY(APP.MATURITY_DATE)||' '||'April'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=5 THEN DAY(APP.MATURITY_DATE)||' '||'May'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=6 THEN DAY(APP.MATURITY_DATE)||' '||'June'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=7 THEN DAY(APP.MATURITY_DATE)||' '||'July'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=8 THEN DAY(APP.MATURITY_DATE)||' '||'August'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                            	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=9 THEN DAY(APP.MATURITY_DATE)||' '||'September'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                         	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=10 THEN DAY(APP.MATURITY_DATE)||' '||'October'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=11 THEN DAY(APP.MATURITY_DATE)||' '||'November'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                         	 WHEN APP.COUNTRY_CODE<>'RU' AND MONTH(APP.MATURITY_DATE)=12 THEN DAY(APP.MATURITY_DATE)||' '||'December'||' '||YEAR(APP.MATURITY_DATE) 
+                                                                                                                                                                                                                                                                                                                                                                         	 END MATURITY_DATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             	 APP.INTEREST_RATE, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             	 APP.REPORT_DATE 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                	 FROM DWH.AUDIT00052 APP ; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                LABEL ON COLUMN DWH.AUDIT_DEPOSIT_13_D_VW 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ( CLIENT_NUMBER IS 'CLIENT NUM-BER' ) ; 
+  
+CREATE VIEW DWH.AUDIT_DEPOSIT_13_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 , 
+	PR ) 
+	AS 
+	SELECT  
+	 CL.CLIENT_NUMBER, 
+	 CL.DAT, 
+	 CASE WHEN CL.CUSTOMER_NAME<>(SELECT BXRUNM FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) THEN CL.CUSTOMER_NAME WHEN CL.RESIDENCE<>'R' THEN (SELECT BBCNA1 FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) ELSE CL.CUSTOMER_NAME END CUSTOMER_NAME ,CASE WHEN CL.CUSTOMER_POSTADRESS IS NULL THEN CUSTOMER_ADRESS ELSE CL.CUSTOMER_POSTADRESS END CUSTOMER_POSTADRESS ,  
+	 CL.PHONE_NUMBER, 
+	 CASE WHEN CL.RESIDENCE='R' THEN 'RUS' ELSE 'N' END LANG , 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_NUM' AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_NUM, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_TEL' AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_TEL, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=1 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_1, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=2 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_2, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=3 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_3, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=4 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_4, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=5 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_5, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=6 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_6, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=7 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_7, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=8 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_8, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=9 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_9, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=10 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_10, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=11 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_11, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=12 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_12, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=13 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_13, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=14 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_14, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=15 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_15, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=16 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_16, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=17 AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END PARAG_17, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=1 AND TAB.ID=13 AND TAB.LANG=CL.RESIDENCE ) END T_1, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=2 AND TAB.ID=13 AND TAB.LANG=CL.RESIDENCE ) END T_2, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=3 AND TAB.ID=13 AND TAB.LANG=CL.RESIDENCE ) END T_3, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=4 AND TAB.ID=13 AND TAB.LANG=CL.RESIDENCE ) END T_4, 
+	 CASE WHEN CL.PR13='1' OR CL.PRACC='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=5 AND TAB.ID=13 AND TAB.LANG=CL.RESIDENCE ) END T_5, 
+	 CASE WHEN CL.PR13='1' AND CL.PRACC='1' THEN 'ACC13' WHEN CL.PRACC='1' THEN '13' WHEN CL.PR13='1' THEN 'ACC' END PR 
+	 FROM DWH.AUDIT00009 CL 
+	WHERE CL.PR13='1' OR CL.PRACC='1' ; 
+  
+LABEL ON COLUMN DWH.AUDIT_DEPOSIT_13_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_DEPOSIT_13_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CB_ACCOUNT , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	VALUE_DATE , 
+	MATURITY_DATE FOR COLUMN MATUR00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	INTEREST_AMOUNT FOR COLUMN INTER00002 , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT CL.CLIENT_NUMBER, A13.MIDAS_ACCOUNT, A13.COUNTRY_CODE, A13.CB_ACCOUNT, A13.CURRENCY_CODE, A13.BALANCE_CUR, A13.VALUE_DATE, A13.MATURITY_DATE, A13.INTEREST_RATE, A13.INTEREST_AMOUNT, A13.REPORT_DATE 
+	FROM DWH.AUDIT00047 A13  
+	 JOIN DWH.AUDIT00009 CL 
+	 ON CL.CLIENT_NUMBER = A13.CLIENT_NUMBER 
+	 AND CL.DAT = A13.REPORT_DATE 
+	 AND CL.PR13 = '1' 
+	WHERE SUBSTR(A13.CB_ACCOUNT,1,3) IN ('410','411','412','413','414','415','416','417','418','419','420','421','422','423','424','425','426') ; 
+  
+LABEL ON COLUMN DWH.AUDIT_DEPOSIT_13_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' ) ; 
+  
+CREATE VIEW DWH.AUDIT_GLC_VW ( 
+	CUSTOMER , 
+	CURRENCY , 
+	ACCNAME , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	OPEN_DATE , 
+	END_DATE , 
+	INDICATION_COVERAGE FOR COLUMN INDIC00001 , 
+	RESIDENCE , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT CL.CLIENT_NUMBER CUSTOMER,  
+			GLC.CURRENCY,  
+			GLC.ACCNAME,  
+			GLC.BALANCE_CUR,  
+			GLC.OPEN_DATE,  
+			GLC.END_DATE,  
+			GLC.INDICATION_COVERAGE,  
+			GLC.RESIDENCE,  
+			GLC.REPORT_DATE 
+	 FROM DWH.AUDIT00009 CL 
+	 JOIN DWH.AUDIT00046 GLC  
+	 ON CL.CLIENT_NUMBER = GLC.CUSTOMER 
+	 AND CL.DAT = GLC.REPORT_DATE 
+	 WHERE CL.PRGLC = '1' ; 
+  
+LABEL ON COLUMN DWH.AUDIT_GLC_VW 
+( CUSTOMER IS 'CLIENT NUM-BER' ) ; 
+  
+CREATE VIEW DWH.AUDIT_INTERBANK_20_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	DEAL_TYPE , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	VALUE_DATE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 ) 
+	AS 
+	SELECT  
+	 CLIENT_NUMBER,  
+	 CASE WHEN COUNTRY_CODE<>'RU' AND DEAL_TYPE='Привл.' THEN 'Taken' WHEN COUNTRY_CODE<>'RU' AND DEAL_TYPE='Разм.' THEN 'Placed' ELSE DEAL_TYPE END DEAL_TYPE ,  
+	 CURRENCY_CODE,  
+	 BALANCE_CUR,  
+	 INTEREST_RATE,  
+	 CASE  
+	 WHEN COUNTRY_CODE='RU' AND DAY(VALUE_DATE)>9 AND MONTH(VALUE_DATE)>9 THEN DAY(VALUE_DATE)||'.'||MONTH(VALUE_DATE)||'.'||YEAR(VALUE_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(VALUE_DATE)<10 AND MONTH(VALUE_DATE)<10 THEN '0'||DAY(VALUE_DATE)||'.'||'0'||MONTH(VALUE_DATE)||'.'||YEAR(VALUE_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(VALUE_DATE)>9 AND MONTH(VALUE_DATE)<10 THEN DAY(VALUE_DATE)||'.'||'0'||MONTH(VALUE_DATE)||'.'||YEAR(VALUE_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(VALUE_DATE)<10 AND MONTH(VALUE_DATE)>9 THEN '0'||DAY(VALUE_DATE)||'.'||MONTH(VALUE_DATE)||'.'||YEAR(VALUE_DATE)  
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=1 THEN DAY(VALUE_DATE)||' '||'January'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                   	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=2 THEN DAY(VALUE_DATE)||' '||'February'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                  	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=3 THEN DAY(VALUE_DATE)||' '||'March'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                     	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=4 THEN DAY(VALUE_DATE)||' '||'April'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                     	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=5 THEN DAY(VALUE_DATE)||' '||'May'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                       	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=6 THEN DAY(VALUE_DATE)||' '||'June'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                      	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=7 THEN DAY(VALUE_DATE)||' '||'July'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                      	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=8 THEN DAY(VALUE_DATE)||' '||'August'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                    	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=9 THEN DAY(VALUE_DATE)||' '||'September'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                 	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=10 THEN DAY(VALUE_DATE)||' '||'October'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                  	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=11 THEN DAY(VALUE_DATE)||' '||'November'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                 	 WHEN COUNTRY_CODE<>'RU' AND MONTH(VALUE_DATE)=12 THEN DAY(VALUE_DATE)||' '||'December'||' '||YEAR(VALUE_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                                                 	 END VALUE_DATE,  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               	 CASE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)>9 THEN DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)<10 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)>9 AND MONTH(LAST_MATURITY_DATE)<10 THEN DAY(LAST_MATURITY_DATE)||'.'||'0'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE)  
+	 WHEN COUNTRY_CODE='RU' AND DAY(LAST_MATURITY_DATE)<10 AND MONTH(LAST_MATURITY_DATE)>9 THEN '0'||DAY(LAST_MATURITY_DATE)||'.'||MONTH(LAST_MATURITY_DATE)||'.'||YEAR(LAST_MATURITY_DATE)  
+	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=1 THEN DAY(LAST_MATURITY_DATE)||' '||'January'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                           	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=2 THEN DAY(LAST_MATURITY_DATE)||' '||'February'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=3 THEN DAY(LAST_MATURITY_DATE)||' '||'March'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=4 THEN DAY(LAST_MATURITY_DATE)||' '||'April'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                             	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=5 THEN DAY(LAST_MATURITY_DATE)||' '||'May'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                               	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=6 THEN DAY(LAST_MATURITY_DATE)||' '||'June'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=7 THEN DAY(LAST_MATURITY_DATE)||' '||'July'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                              	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=8 THEN DAY(LAST_MATURITY_DATE)||' '||'August'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                            	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=9 THEN DAY(LAST_MATURITY_DATE)||' '||'September'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                         	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=10 THEN DAY(LAST_MATURITY_DATE)||' '||'October'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                          	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=11 THEN DAY(LAST_MATURITY_DATE)||' '||'November'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                         	 WHEN COUNTRY_CODE<>'RU' AND MONTH(LAST_MATURITY_DATE)=12 THEN DAY(LAST_MATURITY_DATE)||' '||'December'||' '||YEAR(LAST_MATURITY_DATE)  
+                                                                                                                                                                                                                                                                                                                                                                         	 END LAST_MATURITY_DATE,  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       	 REPORT_DATE  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   	FROM DWH.AUDIT00039 ; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                CREATE VIEW DWH.AUDIT_INTERBANK_20_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	PARAG_18 , 
+	PARAG_19 , 
+	PARAG_20 , 
+	PARAG_21 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 , 
+	T_6 , 
+	T_7 , 
+	T_8 , 
+	T_9 , 
+	T_10 ) 
+	AS 
+	SELECT  
+	 CL.CLIENT_NUMBER, 
+	 CL.DAT, 
+	 CASE WHEN CL.CUSTOMER_NAME<>(SELECT BXRUNM FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) THEN CL.CUSTOMER_NAME WHEN CL.RESIDENCE<>'R' THEN (SELECT BBCNA1 FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) ELSE CL.CUSTOMER_NAME END CUSTOMER_NAME ,CASE WHEN CL.CUSTOMER_POSTADRESS IS NULL THEN CUSTOMER_ADRESS ELSE CL.CUSTOMER_POSTADRESS END CUSTOMER_POSTADRESS ,  
+	 CL.PHONE_NUMBER, 
+	 CASE WHEN CL.RESIDENCE='R' THEN 'RUS' ELSE 'N' END LANG , 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_NUM' AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_NUM, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_TEL' AND TXT.ID=13 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_TEL, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=1 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_1, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=2 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_2, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=3 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_3, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=4 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_4, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=5 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_5, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=6 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_6, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=7 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_7, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=8 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_8, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=9 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_9, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=10 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_10, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=11 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_11, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=12 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_12, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=13 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_13, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=14 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_14, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=15 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_15, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=16 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_16, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=17 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_17, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=18 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_18, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=19 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_19, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=20 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_20, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=21 AND TXT.ID=20 AND TXT.LANG=CL.RESIDENCE ) END PARAG_21, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=1 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_1, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=2 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_2, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=3 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_3, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=4 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_4, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=5 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_5, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=6 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_6, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=7 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_7, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=8 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_8, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=9 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_9, 
+	 CASE WHEN CL.PR20='1' THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=10 AND TAB.ID=20 AND TAB.LANG=CL.RESIDENCE ) END T_10 
+	 FROM DWH.AUDIT00009 CL 
+	WHERE CL.PR20='1' OR (CL.PR2='1' AND (CL.PR20<>'1' OR CL.PR20 IS NULL )) ; 
+  
+LABEL ON COLUMN DWH.AUDIT_INTERBANK_20_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_INTERBANK_20_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CB_ACCOUNT , 
+	MIDAS_ACCOUNT FOR COLUMN MIDAS00001 , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	DEAL_TYPE , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	BALANCE_CUR FOR COLUMN BALAN00001 , 
+	INTEREST_RATE FOR COLUMN INTER00001 , 
+	INTEREST_AMOUNT FOR COLUMN INTER00002 , 
+	VALUE_DATE , 
+	LAST_MATURITY_DATE FOR COLUMN LAST_00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	ID ) 
+	AS 
+	SELECT  
+	 APP.CLIENT_NUMBER, 
+	 APP.CB_ACCOUNT, 
+	 APP.MIDAS_ACCOUNT, 
+	 APP.COUNTRY_CODE, 
+	 APP.DEAL_TYPE, 
+	 APP.CURRENCY_CODE, 
+	 APP.BALANCE_CUR,  
+	 APP.INTEREST_RATE, 
+	 APP.INTEREST_AMOUNT, 
+	 APP.VALUE_DATE , 
+	 APP.LAST_MATURITY_DATE, 
+	 APP.REPORT_DATE, 
+	 APP.ID 
+	 FROM DWH.AUDIT00009 CL JOIN DWH.AUDIT00035 APP ON CL.DAT=APP.REPORT_DATE AND CL.CLIENT_NUMBER= APP.CLIENT_NUMBER 
+	 WHERE CL.PR20='1' AND TRIM(APP.DEAL_TYPE) IN ('Привл.','Разм.') ; 
+  
+CREATE VIEW DWH.AUDIT_LINEOFCREDIT_4_D_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	OSTATOKKREDITLINIA FOR COLUMN OSTAT00001 , 
+	KRLINIAVALUTA FOR COLUMN KRLIN00001 , 
+	OPEN_DATE , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT  
+	 APP.RCUSTOMER AS CLIENT_NUMBER, 
+	 APP.CURRENCY AS CURRENCY_CODE, 
+	 APP.OSTATOKKREDITLINIA AS OSTATOKKREDITLINIA, 
+	 APP.KRLINIAVALUTA AS KRLINIAVALUTA,  
+	 APP.OPEN_DATE AS OPEN_DATE, 
+	 APP.REPORTDATE AS REPORT_DAT, 
+	 APP.AGREEMENT_NUMBER AS AGREEMENT_NUMBER, 
+	 APP.AGREEMENT_DATE AS AGREEMENT_DATE  
+	 FROM DWH.AUDIT00053 APP ; 
+  
+CREATE VIEW DWH.AUDIT_LINEOFCREDIT_4_ST_VW ( 
+	CLIENT_NUMBER FOR COLUMN CLIEN00001 , 
+	REPORT_DATE FOR COLUMN REPOR00001 , 
+	CUSTOMER_NAME FOR COLUMN CUSTO00001 , 
+	CUSTOMER_POSTADRESS FOR COLUMN CUSTO00002 , 
+	PHONE_NUMBER FOR COLUMN PHONE00001 , 
+	LANG , 
+	TXT_CL_NUM , 
+	TXT_CL_TEL , 
+	PARAG_1 , 
+	PARAG_2 , 
+	PARAG_3 , 
+	PARAG_4 , 
+	PARAG_5 , 
+	PARAG_6 , 
+	PARAG_7 , 
+	PARAG_8 , 
+	PARAG_9 , 
+	PARAG_10 , 
+	PARAG_11 , 
+	PARAG_12 , 
+	PARAG_13 , 
+	PARAG_14 , 
+	PARAG_15 , 
+	PARAG_16 , 
+	PARAG_17 , 
+	T_1 , 
+	T_2 , 
+	T_3 , 
+	T_4 , 
+	T_5 ) 
+	AS 
+	SELECT  
+	 CL.CLIENT_NUMBER, 
+	 CL.DAT, 
+	 CASE WHEN CL.CUSTOMER_NAME<>(SELECT BXRUNM FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) THEN CL.CUSTOMER_NAME WHEN CL.RESIDENCE<>'R' THEN (SELECT BBCNA1 FROM DWH.SDCUSTPD WHERE BBCUST=CL.CLIENT_NUMBER) ELSE CL.CUSTOMER_NAME END CUSTOMER_NAME ,CASE WHEN CL.CUSTOMER_POSTADRESS IS NULL THEN CUSTOMER_ADRESS ELSE CL.CUSTOMER_POSTADRESS END CUSTOMER_POSTADRESS ,  
+	 CL.PHONE_NUMBER, 
+	 CASE WHEN CL.RESIDENCE='R' THEN 'RUS' ELSE 'N' END LANG , 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_NUM' AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_NUM, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.PARAG_NUMBER='CL_TEL' AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END TXT_CL_TEL, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=1 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_1, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=2 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_2, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=3 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_3, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=4 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_4, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=5 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_5, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=6 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_6, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=7 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_7, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=8 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_8, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=9 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_9, 
+	 CASE WHEN CL.PR4='1' THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=10 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_10, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=11 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_11, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=12 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_12, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=13 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_13, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=14 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_14, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=15 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_15, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=16 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_16, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TXT.PARAG_CONTENT FROM DWH.SPR_L00002 TXT WHERE TXT.NUM_ROW=17 AND TXT.ID=4 AND TXT.LANG=CL.RESIDENCE ) END PARAG_17, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=1 AND TAB.ID=4 AND TAB.LANG=CL.RESIDENCE ) END T_1, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=2 AND TAB.ID=4 AND TAB.LANG=CL.RESIDENCE ) END T_2, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=3 AND TAB.ID=4 AND TAB.LANG=CL.RESIDENCE ) END T_3, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=4 AND TAB.ID=4 AND TAB.LANG=CL.RESIDENCE ) END T_4, 
+	 CASE WHEN CL.PR4='1'THEN (SELECT TAB.PARAG_CONTENT FROM DWH.T_LETTER TAB WHERE TAB.NUM_ROW=5 AND TAB.ID=4 AND TAB.LANG=CL.RESIDENCE ) END T_5 
+	 FROM DWH.AUDIT00009 CL 
+	WHERE CL.PR4='1' ; 
+  
+LABEL ON COLUMN DWH.AUDIT_LINEOFCREDIT_4_ST_VW 
+( CLIENT_NUMBER IS 'CLIENT NUM-BER' , 
+	REPORT_DATE IS 'REPORT DATE' ) ; 
+  
+CREATE VIEW DWH.AUDIT_LINEOFCREDIT_4_VW ( 
+	RCUSTOMER , 
+	ACCOUNTCB , 
+	MIDAS_ACC , 
+	COUNTRY_CODE FOR COLUMN COUNT00001 , 
+	CURRENCY , 
+	OSTATOKKREDITLINIA FOR COLUMN OSTAT00001 , 
+	KRLINIAVALUTA FOR COLUMN KRLIN00001 , 
+	OPEN_DATE , 
+	REPORTDATE , 
+	AGREEMENT_NUMBER FOR COLUMN AGREE00001 , 
+	AGREEMENT_DATE FOR COLUMN AGREE00002 ) 
+	AS 
+	SELECT  
+	  
+	  
+	  
+	 APP.RCUSTOMER AS RCUSTOMER,  
+	  
+	  
+	  
+	 APP.ACCOUNTCB AS ACCOUNTCB,  
+	  
+	  
+	  
+	 APP.MIDAS_ACC AS MIDAS_ACC,  
+	  
+	  
+	  
+	 CL.RESIDENCE AS COUNTRY_CODE,  
+	  
+	  
+	  
+	 APP.CURRENCY AS CURRENCY,  
+	  
+	  
+	  
+	 APP.KRLINIAVALUTA AS OSTATOKKREDITLINI,  
+	  
+	  
+	  
+	 APP.OSTATOKKREDITLINIA AS KRLINIAVALUTA,  
+	  
+	  
+	  
+	 APP.OPEN_DATE AS OPEN_DATE,  
+	  
+	  
+	  
+	 APP.REPORTDATE AS REPORTDATE, 
+	  
+	  
+	 APP.AGREEMENT_NUMBER AS AGREEMENT_NUMBER,  
+	  
+	  
+	 APP.AGREEMENT_DATE AS AGREEMENT_DATE 
+	  
+	  
+	 FROM DWH.AUDIT00009 CL JOIN DWH.AUDIT00037 APP ON CL.DAT=APP.REPORTDATE AND CL.CLIENT_NUMBER= APP.RCUSTOMER  
+	  
+	  
+	  
+	 WHERE CL.PR4='1' ; 
+  
+CREATE VIEW DWH.BO_HEADER ( 
+	CLIENT_NUM , 
+	MIDAS_ACC , 
+	POD_DATE ) 
+	AS 
+	SELECT 
+	  
+		IMB.CUST	AS CLIENT_NUM,  
+		ACC.ACID	AS MIDAS_ACC  
+	, 
+		( SELECT * FROM DWH.WORKDAY) AS CUR_DATE 
+	  
+	--count(*) 
+	FROM DWH.IMBHBCUP IMB 
+		LEFT JOIN DWH.SDCUSTPD CUST ON IMB.CUST = CUST.BBCUST 
+		LEFT JOIN DWH.ACCRLN ACC ON ACC.CNUM = IMB.CUST 
+		LEFT JOIN (SELECT CL_ACID FROM DWH.F067DATA DAT WHERE DAT.DAT = (SELECT * FROM DWH.WORKDAY) GROUP BY DAT.CL_ACID ) DD ON DD.CL_ACID = ACC.ACID 
+	WHERE ( SELECT * FROM DWH.WORKDAY) BETWEEN IMB.DAT AND IMB.DATTO 
+		AND ( SELECT * FROM DWH.WORKDAY) BETWEEN ACC.DRLNO AND ACC.DRLNC 
+		AND DD.CL_ACID IS NOT NULL 
+		AND SUBSTR(ACC.ACID, 12, 4) IN  
+	( 
+	'1031', 
+	'1032', 
+	'1460', 
+	'1463', 
+	'1805', 
+	'1816', 
+	'1817', 
+	'1818', 
+	'2901', 
+	'3865', 
+	'4002', 
+	'4003', 
+	'4004', 
+	'4005', 
+	'4006', 
+	'4009', 
+	'4010', 
+	'4011', 
+	'4012', 
+	'4013', 
+	'4015', 
+	'4020', 
+	'4055', 
+	'4058', 
+	'4059', 
+	'4060', 
+	'4063', 
+	'4073', 
+	'4074', 
+	'4077', 
+	'4078', 
+	'4092', 
+	'4105', 
+	'4107', 
+	'4109') ; 
+  
+LABEL ON COLUMN DWH.BO_HEADER 
+( MIDAS_ACC IS 'GL Account ID' ) ; 
+  
+LABEL ON COLUMN DWH.BO_HEADER 
+( CLIENT_NUM TEXT IS 'Customer number' , 
+	MIDAS_ACC TEXT IS 'GL Account ID' ) ; 
+  
+CREATE VIEW DWH.BSACC501 ( 
+	ID ) 
+	AS 
+	SELECT BSAACC.ID FROM DWH.BSAACC BSAACC INNER JOIN DWH.CBAC501 CBAC501 ON BSAACC.BSSAC = CBAC501.VAL ; 
+  
+LABEL ON TABLE DWH.BSACC501 
+	IS 'List of CB Accounts for 501' ; 
+  
+LABEL ON COLUMN DWH.BSACC501 
+( ID IS 'BSA Account ID' ) ; 
+  
+CREATE VIEW DWH.BSSACC1 ( 
+	ABTYPE , 
+	ABNAME , 
+	AACBAC , 
+	AAGRP , 
+	AANAM1 , 
+	AANAM2 , 
+	AANAM3 , 
+	AANAM4 , 
+	AAPSAV , 
+	ACNAM1 , 
+	ACNAM2 , 
+	ACNAM3 , 
+	ACNAM4 ) 
+	AS 
+	SELECT IMBCBATP.ABTYPE, IMBCBATP.ABNAME, IMBCBAPP.AACBAC, IMBCBAPP.AAGRP, IMBCBAPP.AANAM1, IMBCBAPP.AANAM2, IMBCBAPP.AANAM3, IMBCBAPP.AANAM4, IMBCBAPP.AAPSAV, IMBCBAGP.ACNAM1, IMBCBAGP.ACNAM2, IMBCBAGP.ACNAM3, IMBCBAGP.ACNAM4 FROM DWH.IMBCBATP IMBCBATP INNER JOIN DWH.IMBCBAPP IMBCBAPP ON IMBCBATP.ABTYPE = IMBCBAPP.AATYPE LEFT JOIN DWH.IMBCBAGP IMBCBAGP ON IMBCBAPP.AAGRP = IMBCBAGP.ACGRP ; 
+  
+LABEL ON TABLE DWH.BSSACC1 
+	IS 'Account sheet' ; 
+  
+CREATE VIEW DWH.CLDR ( 
+	DT , 
+	YR , 
+	QT , 
+	MO ) 
+	AS 
+	SELECT  
+		 DAT DT  
+		, YEAR(DAT) YR  
+		, CEILING(CAST(MONTH(DAT) AS DECIMAL(2))/3) QT  
+		, MONTH(DAT)  
+		FROM DWH.CAL  
+		WHERE CCY='RUR' ; 
+  
+CREATE VIEW DWH.COL_OBJV ( 
+	COLLATERAL_OBJ_ID FOR COLUMN COLLA00001 , 
+	COLLATERAL_AGR_ID FOR COLUMN COLLA00002 , 
+	COLLATERALOBJECT_CODE FOR COLUMN COLLA00003 , 
+	OBJDESCR , 
+	INSURANCECOMPANY_CODE FOR COLUMN INSUR00001 , 
+	INSURANCE_AGR_NUMBER FOR COLUMN INSUR00002 , 
+	INSURANCE_PERIOD_SINCE FOR COLUMN INSUR00003 , 
+	INSURANCE_PERIOD_TILL FOR COLUMN INSUR00004 , 
+	INSURANCE_BENEFICIARY FOR COLUMN INSUR00005 , 
+	READINESS , 
+	IMB_GUARANTEE_NUMBER FOR COLUMN IMB_G00001 , 
+	ISIN , 
+	BLOCKEDACCOUNT FOR COLUMN BLOCK00001 , 
+	DEPOT_ACCOUNT FOR COLUMN DEPOT00001 , 
+	DEPOT_AGR , 
+	SECURIRY_NUMBERS FOR COLUMN SECUR00001 , 
+	DEPOT_OUT , 
+	DEPOTACCOUNT_OUT FOR COLUMN DEPOT00002 , 
+	INTEGER , 
+	COLLATERALFACTOR FOR COLUMN COLLA00004 , 
+	YEAROFRELEASE FOR COLUMN YEARO00001 , 
+	CADASTRAL_NUM FOR COLUMN CADAS00001 , 
+	KLADR_CODE , 
+	END_OF_DATE FOR COLUMN END_O00001 , 
+	TONNAGE , 
+	SHIP_CODE , 
+	SHIP_EQUIP_CODE FOR COLUMN SHIP_00001 , 
+	QOS_CODE , 
+	REGCOUNTRY_CODE FOR COLUMN REGCO00001 , 
+	AIRPLANE_CODE FOR COLUMN AIRPL00001 , 
+	NK_INDEX , 
+	NK_CITY , 
+	NK_REGION , 
+	NK_STREET , 
+	CLASS , 
+	DAT , 
+	DATTO , 
+	AGR_DAT , 
+	AGR_DATTO ) 
+	AS 
+	SELECT 
+	 O.COLLATERAL_OBJ_ID, 
+	 L.COLLATERAL_AGR_ID AS COLLATERAL_AGR_ID, 
+	 O.COLLATERALOBJECT_CODE,  
+	 O.OBJDESCR,  
+	 O.INSURANCECOMPANY_CODE ,  
+	 O.INSURANCE_AGR_NUMBER ,  
+	 O.INSURANCE_PERIOD_SINCE ,  
+	 O.INSURANCE_PERIOD_TILL ,  
+	 O.INSURANCE_BENEFICIARY ,  
+	 O.READINESS ,  
+	 O.IMB_GUARANTEE_NUMBER ,  
+	 O.ISIN ,  
+	 O.BLOCKEDACCOUNT ,  
+	 O.DEPOT_ACCOUNT ,  
+	 O.DEPOT_AGR,  
+	 O.SECURIRY_NUMBERS ,  
+	 O.DEPOT_OUT ,  
+	 O.DEPOTACCOUNT_OUT ,  
+	 O.ISOCCUPIED INTEGER ,  
+	 O.COLLATERALFACTOR ,  
+	 O.YEAROFRELEASE ,  
+	 O.CADASTRAL_NUM ,  
+	 O.KLADR_CODE ,  
+	 O.END_OF_DATE ,  
+	 O.TONNAGE ,  
+	 O.SHIP_CODE ,  
+	 O.SHIP_EQUIP_CODE ,  
+	 O.QOS_CODE ,  
+	 O.REGCOUNTRY_CODE ,  
+	 O.AIRPLANE_CODE ,  
+	 O.NK_INDEX ,  
+	 O.NK_CITY ,  
+	 O.NK_REGION ,  
+	 O.NK_STREET ,  
+	 O.CLASS ,  
+	 O.DAT ,  
+	 O.DATTO, 
+	 VALUE(O.DAT, L.DAT) AS AGR_DAT ,  
+	 VALUE(O.DATTO, L.DATTO) AS AGR_DATTO 
+	FROM 
+	 DWH.COL_OBJ O 
+	 JOIN DWH.COL_LINK L ON  
+	 O.COLLATERAL_OBJ_ID = L.COLLATERAL_OBJ_ID 
+	  
+	UNION  
+	  
+	SELECT 
+	 O.COLLATERAL_OBJ_ID, 
+	 O.COLLATERAL_AGR_ID AS COLLATERAL_AGR_ID, 
+	 O.COLLATERALOBJECT_CODE,  
+	 O.OBJDESCR,  
+	 O.INSURANCECOMPANY_CODE ,  
+	 O.INSURANCE_AGR_NUMBER ,  
+	 O.INSURANCE_PERIOD_SINCE ,  
+	 O.INSURANCE_PERIOD_TILL ,  
+	 O.INSURANCE_BENEFICIARY ,  
+	 O.READINESS ,  
+	 O.IMB_GUARANTEE_NUMBER ,  
+	 O.ISIN ,  
+	 O.BLOCKEDACCOUNT ,  
+	 O.DEPOT_ACCOUNT ,  
+	 O.DEPOT_AGR,  
+	 O.SECURIRY_NUMBERS ,  
+	 O.DEPOT_OUT ,  
+	 O.DEPOTACCOUNT_OUT ,  
+	 O.ISOCCUPIED INTEGER ,  
+	 O.COLLATERALFACTOR ,  
+	 O.YEAROFRELEASE ,  
+	 O.CADASTRAL_NUM ,  
+	 O.KLADR_CODE ,  
+	 O.END_OF_DATE ,  
+	 O.TONNAGE ,  
+	 O.SHIP_CODE ,  
+	 O.SHIP_EQUIP_CODE ,  
+	 O.QOS_CODE ,  
+	 O.REGCOUNTRY_CODE ,  
+	 O.AIRPLANE_CODE ,  
+	 O.NK_INDEX ,  
+	 O.NK_CITY ,  
+	 O.NK_REGION ,  
+	 O.NK_STREET ,  
+	 O.CLASS ,  
+	 O.DAT ,  
+	 O.DATTO, 
+	 O.DAT AS AGR_DAT, 
+	 O.DATTO AS AGR_DATTO 
+	FROM 
+	 DWH.COL_OBJ O  
+	WHERE 
+	 COLLATERAL_AGR_ID IS NOT NULL ; 
+  
+CREATE VIEW DWH.DEAL_OPS_BTHV ( 
+	ID , 
+	DAT , 
+	DATTO , 
+	CALCDAT , 
+	DEALID , 
+	MODPROD , 
+	SUBPROD , 
+	PFI_TYPE , 
+	DELIV_FLG , 
+	KONDORN , 
+	DLNO2 , 
+	AGREEM_NUMBER FOR COLUMN AGREE00001 , 
+	DEAL_NUM , 
+	DDAT , 
+	CDAS , 
+	CNUM , 
+	RECD , 
+	RECI , 
+	RECI2 , 
+	BLNC_A_FLG , 
+	IS_COND , 
+	OPS_BAL2 , 
+	OPS_BAL4 , 
+	S706_P , 
+	S706_T , 
+	S706_N , 
+	ACC_S706_T , 
+	SPSPL_T ) 
+	AS 
+	SELECT  
+				OPS.ID ,  
+				OPS.DAT ,  
+				OPS.DATTO ,  
+				OPS.CALCDAT ,  
+				OPS.DEALID ,  
+				OPS.MODPROD ,  
+				OPS.SUBPROD ,  
+				OPS.PFI_TYPE ,  
+				OPS.DELIV_FLG ,  
+				OPS.KONDORN ,  
+				OPS.DLNO2 ,  
+				OPS.AGREEM_NUMBER ,  
+		 OPS.DEAL_NUM,  
+		 OPS.DDAT,  
+				OPS.CDAS ,  
+				OPS.CNUM ,  
+				OPS.RECD ,  
+				OPS.RECI ,  
+				OPS.RECI2 ,  
+				OPS.BLNC_A_FLG ,  
+		 OPS.IS_COND,  
+				OPS.OPS_BAL2 ,  
+				OPS.OPS_BAL4 ,  
+				VALUE((COR.S706_P - OPS1.S706_P), 0) + VALUE(OPS.S706_P, 0) AS S706_P ,  
+				VALUE((COR.S706_T - OPS1.S706_T), 0) + VALUE(OPS.S706_T, 0) AS S706_T ,  
+				VALUE((COR.S706_P - OPS1.S706_P), 0) + VALUE(OPS.S706_P, 0) + VALUE((COR.S706_T - OPS1.S706_T), 0) + VALUE(OPS.S706_T, 0) AS S706_N ,  
+				VALUE(COR.ACC_S706_T, OPS.ACC_S706_T) AS ACC_S706_T ,  
+				VALUE((COR.SPSPL_T - OPS1.SPSPL_T), 0) + OPS.SPSPL_T AS SPSPL_T  
+	 	 FROM DWH.DEAL_00032 OPS 
+			LEFT JOIN DWH.DEAL_00033 COR ON OPS.DEALID = COR.DEALID AND OPS.CALCDAT BETWEEN COR.CALCDAT AND COR.CALCDATTO  
+	 LEFT JOIN DWH.DEAL_00032 OPS1 ON OPS1.CALCDAT = COR.CALCDAT AND OPS1.DEALID = OPS.DEALID  
+	 AND CURRENT DATE BETWEEN OPS1.DAT AND OPS1.DATTO ; 
+  
+COMMENT ON COLUMN DWH.DEAL_OPS_BTHV 
+( ID IS 'ID - инкрементный' , 
+	DAT IS 'Дата с' , 
+	DATTO IS 'Дата по' , 
+	CALCDAT IS 'Дата расчета - равна параметру процедуры CALCDAT' , 
+	DEALID IS 'ИД сделки БАРС (DEAL_STAV.DEALID)' , 
+	MODPROD IS 'Краткое наименование модуля продукта (DEAL_STAV.MODPROD)' , 
+	SUBPROD IS 'Краткое наименование подпродукта (DEAL_STAV.SUBPROD)' , 
+	PFI_TYPE IS 'Признак ПФИ/сделка с отсрочкой платежа (DEAL_STAV.PFI_TYPE)' , 
+	DELIV_FLG IS 'Признак поставочная/беспоставочная (DEAL_STAV.DELIV_FLG)' , 
+	KONDORN IS 'Номер сделки Кондор (DEAL_STAV.KODORN)' , 
+	DLNO2 IS 'Номер сделки Midas (DEAL_STAV.DLNO2)' , 
+	AGREEM_NUMBER IS 'Номер договора по сделке с ценными бумагами (DEAL_STAV.AGREEM_NUMBER)' , 
+	DEAL_NUM IS 'Номер сделки в учетной истеме' , 
+	DDAT IS 'Дата заключения сделки' , 
+	CDAS IS 'Сиквенс сделки' , 
+	CNUM IS 'Номер клиента' , 
+	RECD IS 'Тип резиденства клиента (CBCTP.RECD, получается с помощью объединений DEAL_STAV.CNUM = SDCUSTPD.BBCUST и SDCUSTPD.BXCTYP = CBCTP.CTYPE)' , 
+	RECI IS 'Статус сделки (Midas)' , 
+	RECI2 IS 'Статус сделки (для отчета)' , 
+	BLNC_A_FLG IS 'ТСС отражается (Пердмет сверки с балансом) - 1/
+ТСС не отражается в учете (Не является предметом сверки с балансом) - 0 
+(Признак учета сделки на балансе графы А по счетам 52601/52602' , 
+	IS_COND IS 'Условная сделка' , 
+	OPS_BAL2 IS 'Сальдо расчетов за день текущего года (таблица DEAL_OPS, OPR_TYPE = 2)' , 
+	OPS_BAL4 IS 'Сальдо доходов за день текущего года (таблица DEAL_OPS, OPR_TYPE = 4)' , 
+	S706_P IS 'Сумма дох/расх за предшествующие года' , 
+	S706_T IS 'Сумма дох/расх за текущий год = полю S706_T за предыдущий день + OPS_BAL4' , 
+	S706_N IS 'Сумма дох/расх накопленная (прошлые + текущий года) = S706_P + S706_T' , 
+	ACC_S706_T IS 'ACOD, SE по дох/расх за текущего года' , 
+	SPSPL_T IS 'Сальдо основных расчетов за текущий год = полю SPSPL_T за предыдущий день + OPS_BAL2' ) ; 
+  
+LABEL ON TABLE DWH.DEAL_OPS_BTHV 
+	IS 'DEAL_OPS_BTHV (VIEW)' ; 
+  
+LABEL ON COLUMN DWH.DEAL_OPS_BTHV 
+( ID IS 'Record ID' , 
+	DAT IS 'DATE ACTUAL FROM' , 
+	DATTO IS 'DATE ACTUAL TO' , 
+	CALCDAT IS 'CALCULATION DATE' , 
+	DEALID IS 'DEAL ID' , 
+	MODPROD IS 'MODULE SHORT NAME' , 
+	SUBPROD IS 'SUBPROD SHORT NAME' , 
+	PFI_TYPE IS 'PFI TYPE' , 
+	DELIV_FLG IS 'IS DELIVERY?' , 
+	KONDORN IS 'KONDOE DEAL NUMBER' , 
+	DLNO2 IS 'MIDAS DEAL NUMBER' , 
+	AGREEM_NUMBER IS 'AGREEMENT NUMBER' , 
+	DEAL_NUM IS 'ACCOUNTING SYSTEM DEAL NUM' , 
+	DDAT IS 'DEAL DATE' , 
+	CDAS IS 'CUSTOMER DEAL A/C SEQ. NO' , 
+	CNUM IS 'CUSTOMER NUMBER' , 
+	RECD IS 'CUSTOMER RESIDENT TYPE' , 
+	RECI IS 'STATUS' , 
+	RECI2 IS 'STATUS FOR REPORT' , 
+	BLNC_A_FLG IS 'IS IN BALANCE A?' , 
+	IS_COND IS 'IS ONDITIONAL?' , 
+	OPS_BAL2 IS 'TODAY PAYMENT BALANCE' , 
+	OPS_BAL4 IS 'TODAY EXPEND BALANCE' , 
+	S706_P IS 'PREV INCOME AMNT' , 
+	S706_T IS 'CUR INCOME AMNT' , 
+	S706_N IS 'ACCUM INCOME AMNT' , 
+	ACC_S706_T IS 'INCOME ACCOUNT' , 
+	SPSPL_T IS 'CUR PAYMENT BALANCE' ) ; 
+  
+LABEL ON COLUMN DWH.DEAL_OPS_BTHV 
+( ID TEXT IS 'Record ID' , 
+	DAT TEXT IS 'DATE ACTUAL FROM' , 
+	DATTO TEXT IS 'DATE ACTUAL TO' , 
+	CALCDAT TEXT IS 'CALCULATION DATE' , 
+	DEALID TEXT IS 'DEAL ID' , 
+	MODPROD TEXT IS 'MODULE SHORT NAME' , 
+	SUBPROD TEXT IS 'SUBPROD SHORT NAME' , 
+	PFI_TYPE TEXT IS 'PFI TYPE' , 
+	DELIV_FLG TEXT IS 'IS DELIVERY?' , 
+	KONDORN TEXT IS 'KONDOE DEAL NUMBER' , 
+	DLNO2 TEXT IS 'MIDAS DEAL NUMBER' , 
+	AGREEM_NUMBER TEXT IS 'AGREEMENT NUMBER' , 
+	DEAL_NUM TEXT IS 'ACCOUNTING SYSTEM DEAL NUM' , 
+	DDAT TEXT IS 'DEAL DATE' , 
+	CDAS TEXT IS 'CUSTOMER DEAL A/C SEQ. NO' , 
+	CNUM TEXT IS 'CUSTOMER NUMBER' , 
+	RECD TEXT IS 'CUSTOMER RESIDENT TYPE' , 
+	RECI TEXT IS 'STATUS' , 
+	RECI2 TEXT IS 'STATUS FOR REPORT' , 
+	BLNC_A_FLG TEXT IS 'IS IN BALANCE A?' , 
+	IS_COND TEXT IS 'IS ONDITIONAL' , 
+	OPS_BAL2 TEXT IS 'TODAY PAYMENT BALANCE' , 
+	OPS_BAL4 TEXT IS 'TODAY EXPEND BALANCE' , 
+	S706_P TEXT IS 'PREV INCOME AMNT' , 
+	S706_T TEXT IS 'CUR INCOME AMNT' , 
+	S706_N TEXT IS 'ACCUM INCOME AMNT' , 
+	ACC_S706_T TEXT IS 'INCOME ACCOUNT' , 
+	SPSPL_T TEXT IS 'CUR PAYMENT BALANCE' ) ; 
+  
+CREATE VIEW DWH.DEAL_STAV ( 
+	ID , 
+	DEALID , 
+	DAT , 
+	DATTO , 
+	MODPROD , 
+	SUBPROD , 
+	PFI_TYPE , 
+	DTYP , 
+	DLST , 
+	DELIV_FLG , 
+	CASH_FLG , 
+	FLOAT_FLG , 
+	RISK_TYPE , 
+	NETTING_FLG FOR COLUMN NETTI00001 , 
+	RECI , 
+	RECI2 , 
+	CNAR , 
+	KONDORN , 
+	MAIN_FLG , 
+	DLNO , 
+	DLNO2 , 
+	CNUM , 
+	INTORG_FLG , 
+	BANK_FLG , 
+	BBCNCZ , 
+	CCODE , 
+	DDAT , 
+	VDAT , 
+	MDAT , 
+	SDAT , 
+	SLID , 
+	NIDT , 
+	PUCY , 
+	PUAM , 
+	SLCY , 
+	SLAM , 
+	ICBS , 
+	IPFR , 
+	INTF , 
+	RTSP , 
+	INTR , 
+	F401_FLG , 
+	KRS_FLG , 
+	F134_FLG , 
+	BLNC_A_FLG , 
+	BLNC_G_FLG , 
+	FVBAL_FLG , 
+	CENTR_FLG , 
+	DEALID2 , 
+	LNKDN , 
+	DEAL_HOST , 
+	DEAL_NUM , 
+	CDAS , 
+	PFI_CONTRACT_FLG FOR COLUMN PFI_C00001 , 
+	AGREEM_NUMBER FOR COLUMN AGREE00001 , 
+	SECUR_DELIV_DAT FOR COLUMN SECUR00001 , 
+	SECUR_PAYMNT_DAT FOR COLUMN SECUR00002 , 
+	PORTF_TYPE , 
+	TRADE_TYPE , 
+	ISSUER_CNUM FOR COLUMN ISSUE00001 , 
+	RESID , 
+	MARKET_FLG , 
+	KR_PFI_155_FLG FOR COLUMN KR_PF00001 , 
+	REPORTING_DAT FOR COLUMN REPOR00001 , 
+	IDNT_ID , 
+	DFN_ID , 
+	PKL_FLG , 
+	"DESCRIPTOR" ) 
+	AS 
+	WITH DEAL_REPLACE  
+					 AS  
+					 (  
+					  
+					 SELECT  
+					 R.DAT,  
+					 R.DATTO,  
+					 VALUE(R1.DEALID_N,R.DEALID_O) AS DEALID_O,  
+					 R.DEALID_O AS DEALID_OLD,  
+					 R.DEALID_N  
+					 FROM  
+					 DWH.DEAL_RPL R  
+					 LEFT JOIN DWH.DEAL_RPL R1 ON  
+					 R.DEALID_O = R1.DEALID_O  
+					 AND  
+					 R1.DATTO +1 DAY = R.DAT  
+					  
+					 )  
+					  
+					  
+					 SELECT STA.ID,  
+					 STA.DEALID,  
+					 CASE WHEN COR.DAT BETWEEN STA.DAT AND STA.DATTO AND COR.DAT <> STA.DATTO THEN COR.DAT  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N AND DEAL_RPL_NEW.DAT BETWEEN STA.DAT AND STA.DATTO) THEN DEAL_RPL_NEW.DAT  
+					 ELSE  
+			 CASE WHEN VALUE(YY.NOM, 2) = 1 THEN SC.DAT ELSE STA.DAT END  
+					 END AS DAT,  
+					 CASE WHEN COR.DATTO BETWEEN STA.DAT AND STA.DATTO AND COR.DATTO <> STA.DAT THEN COR.DATTO  
+					  -- WHEN (STA.DEALID = DEAL_RPL_OLD.DEALID_O AND DEAL_RPL_OLD.DAT BETWEEN STA.DAT AND STA.DATTO) THEN DEAL_RPL_OLD.DAT - 1 DAY 
+					 ELSE  
+			 CASE WHEN VALUE(YY.NOM,2)=1 THEN STA.DATTO ELSE VALUE(SC.DAT - 1 DAY,STA.DATTO) END  
+					 END AS DATTO,  
+					 VALUE(COR.MODPROD, STA.MODPROD) AS MODPROD,  
+					 VALUE(COR.SUBPROD, STA.SUBPROD) AS SUBPROD,  
+					 VALUE(COR.PFI_TYPE, STA.PFI_TYPE) AS PFI_TYPE,  
+					 VALUE(COR.DTYP, STA.DTYP) AS DTYP,  
+					 VALUE(COR.DLST, STA.DLST) AS DLST,  
+					 VALUE(COR.DELIV_FLG, STA.DELIV_FLG) AS DELIV_FLG,  
+					 VALUE(COR.CASH_FLG, STA.CASH_FLG) AS CASH_FLG,  
+					 VALUE(COR.FLOAT_FLG, STA.FLOAT_FLG) AS FLOAT_FLG,  
+					 VALUE(COR.RISK_TYPE, STA.RISK_TYPE) AS RISK_TYPE,  
+					 CASE WHEN VALUE(YY.NOM, 2) = 1 THEN '1' ELSE CASE WHEN NET.NETTING_FLG = 'Y' THEN '1' ELSE '0' END END AS NETTING_FLG,  
+					 VALUE(COR.RECI, STA.RECI) AS RECI,  
+					 CASE WHEN COR.RECI2 IS NOT NULL THEN COR.RECI2  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND DEAL_RPL_NEW.DATTO = '2029-01-01' AND STA.RECI2 = 'M' AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'M'  
+				 WHEN STA.DAT >= STA.VDAT AND STA.RECI <> 'R' THEN 'M'  
+					 WHEN (STA.RECI='D' AND STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'DS'  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND DEAL_RPL_NEW.DATTO <> '2029-01-01' AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'RS'  
+					 WHEN (STA.DEALID = DEAL_RPL_OLD.DEALID_O  
+					 AND (STA.DAT <= DEAL_RPL_OLD.DATTO AND STA.DATTO >= DEAL_RPL_OLD.DAT)) THEN 'RS'  
+					 ELSE STA.RECI2  -- ??? 
+					 END AS RECI2,  
+					 VALUE(COR.CNAR, STA.CNAR) AS CNAR,  
+					 CASE WHEN COR.KONDORN IS NOT NULL THEN COR.KONDORN  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND( DEAL_RPL_NEW.DAT <= STA.DAT  
+					 OR DEAL_RPL_NEW.DAT BETWEEN STA.DAT AND STA.DATTO)) THEN VALUE(COR_OLD.KONDORN, STA_OLD.KONDORN, STA.KONDORN)  
+					 ELSE STA.KONDORN  
+					 END AS KONDORN,  
+					  --- for 'RS' main_flg = 0 
+					 CHAR(  
+					 CASE WHEN COR.MAIN_FLG IS NOT NULL THEN COR.MAIN_FLG  
+					 WHEN (STA.RECI='D' AND STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN VALUE(COR_OLD.MAIN_FLG, STA_OLD.MAIN_FLG, STA.MAIN_FLG )  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND DEAL_RPL_NEW.DATTO <> '2029-01-01' AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN VALUE(COR_OLD.MAIN_FLG, '0')  
+					 WHEN (STA.DEALID = DEAL_RPL_OLD.DEALID_O  
+					 AND (STA.DAT <= DEAL_RPL_OLD.DATTO AND STA.DATTO >= DEAL_RPL_OLD.DAT)) THEN VALUE(COR_OLD.MAIN_FLG,'0')  
+					 ELSE STA.MAIN_FLG  
+					 END) AS MAIN_FLG,  
+					 VALUE(COR.DLNO, STA.DLNO) AS DLNO,  
+					 CASE WHEN COR.DLNO2 IS NOT NULL THEN COR.DLNO2  
+					 /*WHEN ( (STA.DEALID = DEAL_RPL_NEW.DEALID_N  OR STA.DEALID = DEAL_RPL_OLD.DEALID_N      
+					         
+					            AND (  (DEAL_RPL_NEW.DAT <= STA.DAT       
+					            OR DEAL_RPL_NEW.DAT BETWEEN STA.DAT AND STA.DATTO OR DEAL_RPL_OLD.DAT <= STA.DAT OR DEAL_RPL_OLD.DAT BETWEEN STA.DAT AND STA.DATTO OR DEAL_RPL_OLD.DAT <= STA.DAT)  )) THEN VALUE(COR_OLD.DLNO2,STA_OLD.DLNO2 )        
+					  */  
+					 ELSE COALESCE(COR_OLD.DLNO2,STA_OLD.DLNO2 ,STA.DLNO2) END AS DLNO2,  
+					 VALUE(COR.CNUM, STA.CNUM) AS CNUM,  
+					 VALUE(COR.INTORG_FLG, STA.INTORG_FLG) AS INTORG_FLG,  
+					 VALUE(COR.BANK_FLG, STA.BANK_FLG) AS BANK_FLG,  
+					 VALUE(COR.BBCNCZ, STA.BBCNCZ) AS BBCNCZ,  
+					 VALUE(COR.CCODE, STA.CCODE) AS CCODE,  
+					 VALUE(COR.DDAT, STA.DDAT) AS DDAT,  
+					 VALUE(COR.VDAT, STA.VDAT) AS VDAT,  
+					 VALUE(COR.MDAT, STA.MDAT) AS MDAT,  
+					 VALUE(COR.SDAT, STA.SDAT) AS SDAT,  
+					 VALUE(COR.SLID, STA.SLID) AS SLID,  
+					 VALUE(COR.NIDT, STA.NIDT) AS NIDT,  
+					 VALUE(COR.PUCY, STA.PUCY) AS PUCY,  
+					 VALUE(COR.PUAM, STA.PUAM) AS PUAM,  
+					 VALUE(COR.SLCY, STA.SLCY) AS SLCY,  
+					 VALUE(COR.SLAM, STA.SLAM) AS SLAM,  
+					 VALUE(COR.ICBS, STA.ICBS) AS ICBS,  
+					 VALUE(COR.IPFR, STA.IPFR) AS IPFR,  
+					 VALUE(COR.INTF, STA.INTF) AS INTF,  
+					 VALUE(COR.RTSP, STA.RTSP) AS RTSP,  
+					 VALUE(COR.INTR, STA.INTR) AS INTR,  
+					 VALUE(COR.F401_FLG, STA.F401_FLG) AS F401_FLG,  
+					 VALUE(COR.KRS_FLG, STA.KRS_FLG) AS KRS_FLG,  
+					 VALUE(COR.F134_FLG, STA.F134_FLG) AS F134_FLG,  
+					 VALUE(COR.BLNC_A_FLG, STA.BLNC_A_FLG) AS BLNC_A_FLG,  
+					 VALUE(COR.BLNC_G_FLG, STA.BLNC_G_FLG) AS BLNC_G_FLG,  
+					 VALUE(COR.FVBAL_FLG, STA.FVBAL_FLG) AS FVBAL_FLG,  
+					 VALUE(COR.CENTR_FLG, STA.CENTR_FLG) AS CENTR_FLG,  
+					 VALUE(COR.DEALID2, STA.DEALID2) AS DEALID2,  
+					 STA.LNKDN AS LNKDN,  
+					 DT.DEAL_HOST,  
+					  --?? ???? 741, ??????? ??? ???????? ? ?????? DEAL_HOST 
+					 CASE WHEN DT.DEAL_HOST = 'KONDORN' THEN  
+					 CASE WHEN COR.KONDORN IS NOT NULL THEN COR.KONDORN  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND( DEAL_RPL_NEW.DAT <= STA.DAT  
+					 OR DEAL_RPL_NEW.DAT BETWEEN STA.DAT AND STA.DATTO)) THEN VALUE(COR_OLD.KONDORN, STA_OLD.KONDORN, STA.KONDORN)  
+					 ELSE STA.KONDORN  
+					 END  
+					 WHEN DT.DEAL_HOST = 'MIDAS' THEN  
+					 CASE WHEN COR.DLNO2 IS NOT NULL THEN COR.DLNO2  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND (DEAL_RPL_NEW.DAT <= STA.DAT  
+					 OR DEAL_RPL_NEW.DAT BETWEEN STA.DAT AND STA.DATTO )) THEN VALUE(COR_OLD.DLNO2, STA_OLD.DLNO2, STA.DLNO2)  
+					 ELSE STA.DLNO2  
+					 END  
+					 ELSE ''  
+					 END AS DEAL_NUM,  
+					 VALUE(COR.CDAS, STA.CDAS) AS CDAS,  
+					 STA.PFI_CONTRACT_FLG AS PFI_CONTRACT_FLG ,  
+					 '' AS AGREEM_NUMBER ,  
+					 CAST(NULL AS DATE) AS SECUR_DELIV_DAT ,  
+					 CAST(NULL AS DATE) AS SECUR_PAYMNT_DAT ,  
+					 '' AS PORTF_TYPE ,  
+					 '' AS TRADE_TYPE ,  
+					 '' AS ISSUER_CNUM ,  
+					 VALUE(COR.RESID, STA.RESID) AS RESID ,  
+					 VALUE(COR.MARKET_FLG, STA.MARKET_FLG) AS MARKET_FLG ,  
+					 VALUE(COR.KR_PFI_155_FLG, STA.KR_PFI_155_FLG) AS KR_PFI_155_FLG ,  
+					 VALUE(COR.REPORTING_DAT, STA.REPORTING_DAT) AS REPORTING_DAT ,  
+					 VALUE(COR.IDNT_ID, STA.IDNT_ID) AS IDNT_ID ,  
+					 VALUE(COR.DFN_ID, STA.DFN_ID) AS DFN_ID,  
+					 VALUE(COR.PKL_FLG, STA.PKL_FLG) AS PKL_FLG,  
+					 DT."DESCRIPTOR"  
+					 FROM  
+			 DWH.DEAL_STA STA  
+					  
+			  
+					 LEFT JOIN DEAL_REPLACE DEAL_RPL_OLD ON DEAL_RPL_OLD.DEALID_O = STA.DEALID AND STA.DAT BETWEEN DEAL_RPL_OLD.DAT AND DEAL_RPL_OLD.DATTO  
+					 LEFT JOIN /*DEAL_RPL*/DEAL_REPLACE DEAL_RPL_NEW  
+					  
+					  
+					 ON DEAL_RPL_NEW.DEALID_N = STA.DEALID AND STA.DAT BETWEEN DEAL_RPL_NEW.DAT AND DEAL_RPL_NEW.DATTO  
+					 LEFT JOIN DWH.DEAL_COR COR ON  
+					 (STA.DAT <= COR.CORDATTO AND STA.DATTO >= COR.CORDAT)  
+					 AND COR.DEALID = STA.DEALID  
+					 AND COR.COR_TYPE = 'C'  
+					 EXCEPTION JOIN DWH.DEAL_COR COR_D ON  
+					 (STA.DAT <= COR_D.CORDATTO AND STA.DATTO >= COR_D.CORDAT)  
+					 AND COR_D.DEALID = STA.DEALID  
+					 AND COR_D.COR_TYPE = 'D'  
+					  
+					 LEFT JOIN DWH.DEAL_STA STA_OLD ON (DEAL_RPL_NEW.DEALID_OLD = STA_OLD.DEALID OR DEAL_RPL_OLD.DEALID_OLD = STA_OLD.DEALID) AND  
+					 (DEAL_RPL_NEW.DAT - 1 DAY BETWEEN STA_OLD.DAT AND STA_OLD.DATTO OR DEAL_RPL_OLD.DAT - 1 DAY BETWEEN STA_OLD.DAT AND STA_OLD.DATTO)  
+					 LEFT JOIN DWH.DEAL_COR COR_OLD ON  
+					 (STA_OLD.DAT <= COR_OLD.CORDATTO AND STA_OLD.DATTO >= COR_OLD.CORDAT)  
+					 AND COR_OLD.DEALID = STA_OLD.DEALID  
+					 AND COR_OLD.COR_TYPE = 'C'  
+					 EXCEPTION JOIN DWH.DEAL_COR COR_OLD_D ON  
+					 (STA_OLD.DAT <= COR_OLD_D.CORDATTO AND STA_OLD.DATTO >= COR_OLD_D.CORDAT)  
+					 AND COR_OLD_D.DEALID = STA_OLD.DEALID  
+					 AND COR_OLD_D.COR_TYPE = 'D'  
+					 LEFT JOIN DWH.DEAL_TYPES DT ON VALUE (COR.IDNT_ID, COR_OLD.IDNT_ID, STA_OLD.IDNT_ID, STA.IDNT_ID) = DT.IDNT_ID  
+					 AND VALUE (COR.DFN_ID, COR_OLD.DFN_ID, STA_OLD.DFN_ID, STA.DFN_ID) = DT.DFN_ID  
+			 LEFT JOIN DWH.XSDCUSTPD NET ON STA.CNUM = NET.CNUM AND STA.DAT BETWEEN NET.DAT AND NET.DATTO  
+			 LEFT JOIN DWH.XSDCUSTPD SC ON STA.CNUM = SC.CNUM AND SC.NETTING_FLG='Y' AND  
+			 (  
+			 CASE WHEN COR.RECI2 IS NOT NULL THEN COR.RECI2  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND DEAL_RPL_NEW.DATTO = '2029-01-01' AND STA.RECI2 = 'M' AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'M'  
+				 WHEN STA.DAT >= STA.VDAT AND STA.RECI <> 'R' THEN 'M'  
+					 WHEN (STA.RECI='D' AND STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'DS'  
+					 WHEN (STA.DEALID = DEAL_RPL_NEW.DEALID_N  
+					 AND DEAL_RPL_NEW.DATTO <> '2029-01-01' AND (STA.DAT <= DEAL_RPL_NEW.DATTO AND STA.DATTO >= DEAL_RPL_NEW.DAT)) THEN 'RS'  
+					 WHEN (STA.DEALID = DEAL_RPL_OLD.DEALID_O  
+					 AND (STA.DAT <= DEAL_RPL_OLD.DATTO AND STA.DATTO >= DEAL_RPL_OLD.DAT)) THEN 'RS'  
+					 ELSE STA.RECI2  -- ??? 
+					 END  
+			  
+			 ) LIKE 'D%' /*Проверка статуса после применения корректировок!!!*/  
+			 AND SC.DAT > STA.DAT AND SC.DAT<= STA.DATTO  
+			 LEFT JOIN (  
+			  
+			 SELECT 1 AS NOM  
+			 FROM SYSIBM.SYSDUMMY1  
+			 UNION  
+			 SELECT 2 AS NOM  
+			 FROM SYSIBM.SYSDUMMY1  
+			 ) YY ON SC.DAT <> STA.DAT AND STA.RECI2 LIKE 'D%' AND SC.NETTING_FLG='Y'  
+			  
+					  
+					 UNION  
+					  
+					 SELECT  
+					 STA_SEC.ID,  
+					 STA_SEC.DEALID,  
+					 CASE WHEN COR_SEC.DAT BETWEEN STA_SEC.DAT AND STA_SEC.DATTO AND COR_SEC.DAT <> STA_SEC.DATTO THEN COR_SEC.DAT  
+					 ELSE STA_SEC.DAT  
+					 END AS DAT,  
+					 CASE WHEN COR_SEC.DATTO BETWEEN STA_SEC.DAT AND STA_SEC.DATTO AND COR_SEC.DATTO <> STA_SEC.DAT THEN COR_SEC.DATTO  
+					 ELSE STA_SEC.DATTO  
+					 END AS DATTO,  
+					 VALUE(COR_SEC.MODPROD, STA_SEC.MODPROD) AS MODPROD,  
+					 '' AS SUBPROD,  
+					 VALUE(COR_SEC.PFI_TYPE, STA_SEC.PFI_TYPE) AS PFI_TYPE,  
+					 VALUE(COR_SEC.DTYP, STA_SEC.DTYP) AS DTYP,  
+					 '' AS DLST,  
+					 IDNT.DELIV_FLG AS DELIV_FLG,  
+					 '' AS CASH_FLG,  
+					 '' AS FLOAT_FLG,  
+					 VALUE(COR_SEC.RISK_TYPE, STA_SEC.RISK_TYPE) AS RISK_TYPE,  
+					 VALUE(COR_SEC.NETTING_FLG, STA_SEC.NETTING_FLG) AS NETTING_FLG,  
+					 VALUE(COR_SEC.RECI, STA_SEC.RECI) AS RECI,  
+					 VALUE(COR_SEC.RECI2, STA_SEC.RECI2) AS RECI2,  
+					 '' AS CNAR,  
+					 '' AS KONDORN,  
+					 IDNT.MAIN_PART AS MAIN_FLG,  
+					 '' AS DLNO,  
+					 '' AS DLNO2,  
+					 VALUE(COR_SEC.CNUM, STA_SEC.CNUM) AS CNUM,  
+					 VALUE(COR_SEC.INTORG_FLG, STA_SEC.INTORG_FLG) AS INTORG_FLG,  
+					 VALUE(COR_SEC.BANK_FLG, STA_SEC.BANK_FLG) AS BANK_FLG,  
+					 VALUE(COR_SEC.BBCNCZ, STA_SEC.BBCNCZ) AS BBCNCZ,  
+					 VALUE(COR_SEC.CCODE, STA_SEC.CCODE) AS CCODE,  
+					 VALUE(COR_SEC.DDAT, STA_SEC.DDAT) AS DDAT,  
+					 VALUE(COR_SEC.VDAT, STA_SEC.VDAT) AS VDAT,  
+					 CAST(NULL AS DATE) AS MDAT,  
+					 CAST(NULL AS DATE) AS SDAT,  
+					 CAST(NULL AS DATE) AS SLID,  
+					 CAST(NULL AS DATE) AS NIDT,  
+					 VALUE(COR_SEC.PUCY, STA_SEC.PUCY) AS PUCY,  
+					 VALUE(COR_SEC.PUAM, STA_SEC.PUAM) AS PUAM,  
+					 VALUE(COR_SEC.SLCY, STA_SEC.SLCY) AS SLCY,  
+					 VALUE(COR_SEC.SLAM, STA_SEC.SLAM) AS SLAM,  
+					 CAST(NULL AS INTEGER) AS ICBS,  
+					 '' AS IPFR,  
+					 CAST(NULL AS INTEGER) AS INTF,  
+					 CAST(NULL AS DECIMAL(11, 7)) AS RTSP,  
+					 CAST(NULL AS DECIMAL(11, 7)) AS INTR,  
+					 VALUE(COR_SEC.F401_FLG, STA_SEC.F401_FLG) AS F401_FLG,  
+					 VALUE(COR_SEC.KRS_FLG, STA_SEC.KRS_FLG) AS KRS_FLG,  
+					 VALUE(COR_SEC.F134_FLG, STA_SEC.F134_FLG) AS F134_FLG,  
+					 VALUE(COR_SEC.BLNC_A_FLG, STA_SEC.BLNC_A_FLG) AS BLNC_A_FLG,  
+					 VALUE(COR_SEC.BLNC_G_FLG, STA_SEC.BLNC_G_FLG) AS BLNC_G_FLG,  
+					 VALUE(COR_SEC.FVBAL_FLG, STA_SEC.FVBAL_FLG) AS FVBAL_FLG,  
+					 VALUE(COR_SEC.CENTR_FLG, STA_SEC.CENTR_FLG) AS CENTR_FLG,  
+					 CAST(NULL AS INTEGER) AS DEALID2,  
+					 '' AS LNKDN,  
+					 DT.DEAL_HOST,  
+					 VALUE(COR_SEC.AGREEM_NUMBER, STA_SEC.AGREEM_NUMBER) AS DEAL_NUM,  
+					 '' AS CDAS,  
+					 '' AS PFI_CONTRACT_FLG ,  
+					 VALUE(COR_SEC.AGREEM_NUMBER, STA_SEC.AGREEM_NUMBER) AS AGREEM_NUMBER ,  
+					 VALUE(COR_SEC.SECUR_DELIV_DAT, STA_SEC.SECUR_DELIV_DAT) AS SECUR_DELIV_DAT ,  
+					 VALUE(COR_SEC.SECUR_PAYMNT_DAT, STA_SEC.SECUR_PAYMNT_DAT) AS SECUR_PAYMNT_DAT ,  
+					 VALUE(COR_SEC.PORTF_TYPE, STA_SEC.PORTF_TYPE) AS PORTF_TYPE ,  
+					 VALUE(COR_SEC.TRADE_TYPE, STA_SEC.TRADE_TYPE) AS TRADE_TYPE ,  
+					 VALUE(COR_SEC.ISSUER_CNUM, STA_SEC.ISSUER_CNUM) AS ISSUER_CNUM ,  
+					 VALUE(COR_SEC.RESID, STA_SEC.RESID) AS RESID ,  
+					 VALUE(COR_SEC.MARKET_FLG, STA_SEC.MARKET_FLG) AS MARKET_FLG ,  
+					 VALUE(COR_SEC.KR_PFI_155_FLG, STA_SEC.KR_PFI_155_FLG) AS KR_PFI_155_FLG ,  
+					 CAST(NULL AS DATE) AS REPORTING_DAT ,  
+					 VALUE(COR_SEC.IDNT_ID, STA_SEC.IDNT_ID) AS IDNT_ID ,  
+					 STA_SEC.DFN_ID AS DFN_ID,  
+					 VALUE(COR_SEC.PKL_FLG, STA_SEC.PKL_FLG) AS PKL_FLG,  
+					 DT."DESCRIPTOR"  
+					 FROM DWH.DEAL_00007 STA_SEC  
+					 LEFT JOIN DWH.DEAL_00008 COR_SEC ON  
+					 (STA_SEC.DAT <= COR_SEC.CORDATTO AND STA_SEC.DATTO >= COR_SEC.CORDAT)  
+					 AND COR_SEC.DEALID = STA_SEC.DEALID  
+					 AND COR_SEC.COR_TYPE = 'C'  
+					 EXCEPTION JOIN DWH.DEAL_COR COR_SEC_D ON  
+					 (STA_SEC.DAT <= COR_SEC_D.CORDATTO AND STA_SEC.DATTO >= COR_SEC_D.CORDAT)  
+					 AND COR_SEC_D.DEALID = STA_SEC.DEALID  
+					 AND COR_SEC_D.COR_TYPE = 'D'  
+					 LEFT JOIN DWH.DEAL_TYPES DT ON (STA_SEC.IDNT_ID, STA_SEC.DFN_ID) = (DT.IDNT_ID, DT.DFN_ID)  
+					 OR (COR_SEC.IDNT_ID, COR_SEC.DFN_ID) = (DT.IDNT_ID, DT.DFN_ID)  
+					 LEFT JOIN DWH.DEAL_00036 IDNT ON STA_SEC.IDNT_ID = IDNT.ID  
+					  
+					 UNION  
+					  
+					 SELECT  
+					 COR.ID,  
+					 COR.DEALID,  
+					 COR.DAT,  
+					 COR.DATTO,  
+					 COR.MODPROD,  
+					 COR.SUBPROD,  
+					 COR.PFI_TYPE,  
+					 COR.DTYP,  
+					 COR.DLST,  
+					 COR.DELIV_FLG,  
+					 COR.CASH_FLG,  
+					 COR.FLOAT_FLG,  
+					 COR.RISK_TYPE,  
+					 COR.NETTING_FLG,  
+					 COR.RECI,  
+					 COR.RECI2,  
+					 COR.CNAR,  
+					 COR.KONDORN ,  
+					 CHAR(COR.MAIN_FLG) MAIN_FLG,  
+					 COR.DLNO,  
+					 COR.DLNO2,  
+					 COR.CNUM,  
+					 COR.INTORG_FLG,  
+					 COR.BANK_FLG,  
+					 COR.BBCNCZ,  
+					 COR.CCODE,  
+					 COR.DDAT,  
+					 COR.VDAT,  
+					 COR.MDAT,  
+					 COR.SDAT,  
+					 COR.SLID,  
+					 COR.NIDT,  
+					 COR.PUCY,  
+					 COR.PUAM,  
+					 COR.SLCY,  
+					 COR.SLAM,  
+					 COR.ICBS,  
+					 COR.IPFR,  
+					 COR.INTF,  
+					 COR.RTSP,  
+					 COR.INTR,  
+					 COR.F401_FLG,  
+					 COR.KRS_FLG ,  
+					 COR.F134_FLG,  
+					 COR.BLNC_A_FLG,  
+					 COR.BLNC_G_FLG,  
+					 COR.FVBAL_FLG,  
+					 COR.CENTR_FLG,  
+					 COR.DEALID2,  
+					 COR.LNKDN ,  
+					 DT.DEAL_HOST,  
+					 CASE WHEN DT.DEAL_HOST='KONDORN' THEN COR.KONDORN  
+					 WHEN DT.DEAL_HOST='MIDAS' THEN COR.DLNO2  
+					 ELSE ''  
+					 END AS DEAL_NUM,  
+					 COR.CDAS AS CDAS,  
+					 '' AS PFI_CONTRACT_FLG ,  
+					 '' AS AGREEM_NUMBER ,  
+					 CAST(NULL AS DATE) AS SECUR_DELIV_DAT ,  
+					 CAST(NULL AS DATE) AS SECUR_PAYMNT_DAT ,  
+					 '' AS PORTF_TYPE ,  
+					 '' AS TRADE_TYPE ,  
+					 '' AS ISSUER_CNUM ,  
+					 COR.RESID,  
+					 COR.MARKET_FLG,  
+					 COR.KR_PFI_155_FLG,  
+					 COR.REPORTING_DAT,  
+					 COR.IDNT_ID,  
+					 COR.DFN_ID,  
+					 COR.PKL_FLG,  
+					 DT."DESCRIPTOR"  
+					  
+					 FROM DWH.DEAL_COR COR  
+					 /*        
+					        EXCEPTION JOIN DEAL_STA STA ON ( (STA.DEALID = COR.DEALID         
+					          AND STA.DLNO = COR.DLNO )         
+					          AND (STA.DAT <= COR.CORDATTO AND STA.DATTO >= COR.CORDAT)         
+					          )        
+					        */  
+					 LEFT JOIN DWH.DEAL_TYPES DT ON (COR.IDNT_ID, COR.DFN_ID) = (DT.IDNT_ID, DT.DFN_ID)  
+					 WHERE COR.COR_TYPE = 'A'  
+					  
+					 UNION  
+					  
+					 SELECT  
+					 COR_SEC.ID,  
+					 COR_SEC.DEALID,  
+					 COR_SEC.DAT,  
+					 COR_SEC.DATTO,  
+					 COR_SEC.MODPROD,  
+					 '' AS SUBPROD,  
+					 COR_SEC.PFI_TYPE,  
+					 COR_SEC.DTYP,  
+					 '' AS DLST,  
+					 '' AS DELIV_FLG,  
+					 '' AS CASH_FLG,  
+					 '' AS FLOAT_FLG,  
+					 COR_SEC.RISK_TYPE AS RISK_TYPE,  
+					 COR_SEC.NETTING_FLG,  
+					 COR_SEC.RECI,  
+					 COR_SEC.RECI2,  
+					 '' AS CNAR,  
+					 '' AS KONDORN,  
+					 '' AS MAIN_FLG,  
+					 '' AS DLNO,  
+					 '' AS DLNO2,  
+					 COR_SEC.CNUM,  
+					 COR_SEC.INTORG_FLG,  
+					 COR_SEC.BANK_FLG,  
+					 COR_SEC.BBCNCZ,  
+					 COR_SEC.CCODE,  
+					 COR_SEC.DDAT,  
+					 COR_SEC.VDAT,  
+					 CAST(NULL AS DATE) AS MDAT,  
+					 CAST(NULL AS DATE) AS SDAT,  
+					 CAST(NULL AS DATE) AS SLID,  
+					 CAST(NULL AS DATE) AS NIDT,  
+					 COR_SEC.PUCY,  
+					 COR_SEC.PUAM,  
+					 COR_SEC.SLCY,  
+					 COR_SEC.SLAM,  
+					 CAST(NULL AS INTEGER) AS ICBS,  
+					 '' AS IPFR,  
+					 CAST(NULL AS INTEGER) AS INTF,  
+					 CAST(NULL AS DECIMAL(11, 7)) AS RTSP,  
+					 CAST(NULL AS DECIMAL(11, 7)) AS INTR,  
+					 COR_SEC.F401_FLG,  
+					 COR_SEC.KRS_FLG,  
+					 COR_SEC.F134_FLG AS F134_FLG,  
+					 COR_SEC.BLNC_A_FLG,  
+					 COR_SEC.BLNC_G_FLG,  
+					 COR_SEC.FVBAL_FLG AS FVBAL_FLG,  
+					 COR_SEC.CENTR_FLG,  
+					 CAST(NULL AS INTEGER) AS DEALID2,  
+					 '' AS LNKDN,  
+					 DT.DEAL_HOST,  
+					 COR_SEC.AGREEM_NUMBER,  
+					 '' AS CDAS,  
+					 '' AS PFI_CONTRACT_FLG ,  
+					 COR_SEC.AGREEM_NUMBER,  
+					 COR_SEC.SECUR_DELIV_DAT,  
+					 COR_SEC.SECUR_PAYMNT_DAT,  
+					 COR_SEC.PORTF_TYPE,  
+					 COR_SEC.TRADE_TYPE,  
+					 COR_SEC.ISSUER_CNUM,  
+					 COR_SEC.RESID,  
+					 COR_SEC.MARKET_FLG,  
+					 COR_SEC.KR_PFI_155_FLG,  
+					 CAST(NULL AS DATE) AS REPORTING_DAT ,  
+					 COR_SEC.IDNT_ID ,  
+					 DFN.ID AS DFN_ID,  
+					 COR_SEC.PKL_FLG ,  
+					 DT."DESCRIPTOR"  
+					 FROM DWH.DEAL_00008 COR_SEC  
+					 /*        
+					        EXCEPTION JOIN DEAL_STA_SECUR STA_SEC ON (STA_SEC.DEALID = COR_SEC.DEALID         
+					          OR STA_SEC.DLNO = COR_SEC.DLNO         
+					          OR (STA_SEC.DAT <= COR_SEC.CORDATTO AND STA_SEC.DATTO >= COR_SEC.CORDAT)         
+					          )        
+					        */  
+					 LEFT JOIN DWH.DEAL_00035 DFN ON  
+					 (COR_SEC.RESID, COR_SEC.MARKET_FLG, COR_SEC.BLNC_A_FLG, COR_SEC.RISK_TYPE, COR_SEC.BLNC_G_FLG, COR_SEC.KRS_FLG, COR_SEC.KR_PFI_155_FLG, COR_SEC.F134_FLG, COR_SEC.F401_FLG, COR_SEC.PKL_FLG) =  
+					 (DFN.CHK_RESID, DFN.CHK_MARKET_FLG, DFN.CHK_BLNC_A_FLG, DFN.RISK_TYPE, DFN.BLNC_G_FLG, DFN.KRS_FLG, DFN.KR_PFI_155_FLG, DFN.F134_FLG, DFN.F401_FLG, DFN.PKL_FLG)  
+					 AND (DFN.DAT <= COR_SEC.CORDATTO AND DFN.DATTO >= COR_SEC.CORDAT)  
+					 LEFT JOIN DWH.DEAL_TYPES DT ON (COR_SEC.IDNT_ID, DFN.ID) = (DT.IDNT_ID, DT.DFN_ID)  
+					 WHERE COR_SEC.COR_TYPE = 'A'  
+					  
+					 UNION  
+					  
+					 SELECT  
+					 STA_SYS.ID,  
+					 STA_SYS.DEALID,  
+					 STA_SYS.DAT,  
+					 STA_SYS.DATTO,  
+					 STA_SYS.MODPROD,  
+					 STA_SYS.SUBPROD,  
+					 STA_SYS.PFI_TYPE,  
+					 STA_SYS.DTYP,  
+					 STA_SYS.DLST,  
+					 STA_SYS.DELIV_FLG,  
+					 STA_SYS.CASH_FLG,  
+					 STA_SYS.FLOAT_FLG,  
+					 STA_SYS.RISK_TYPE,  
+					 STA_SYS.NETTING_FLG,  
+					 STA_SYS.RECI,  
+					 STA_SYS.RECI2,  
+					 STA_SYS.CNAR,  
+					 STA_SYS.KONDORN,  
+					 STA_SYS.MAIN_FLG,  
+					 STA_SYS.DLNO,  
+					 STA_SYS.DLNO2,  
+					 STA_SYS.CNUM,  
+					 STA_SYS.INTORG_FLG,  
+					 STA_SYS.BANK_FLG,  
+					 STA_SYS.BBCNCZ,  
+					 STA_SYS.CCODE,  
+					 STA_SYS.DDAT,  
+					 STA_SYS.VDAT,  
+					 STA_SYS.MDAT,  
+					 STA_SYS.SDAT,  
+					 STA_SYS.SLID,  
+					 STA_SYS.NIDT,  
+					 STA_SYS.PUCY,  
+					 STA_SYS.PUAM,  
+					 STA_SYS.SLCY,  
+					 STA_SYS.SLAM,  
+					 STA_SYS.ICBS,  
+					 STA_SYS.IPFR,  
+					 STA_SYS.INTF,  
+					 STA_SYS.RTSP,  
+					 STA_SYS.INTR,  
+					 DT.F401_FLG,  
+					 DT.KRS_FLG,  
+					 DT.F134_FLG,  
+					 DT.BLNC_A_FLG,  
+					 DT.BLNC_G_FLG,  
+					 DT.FVBAL_FLG,  
+					 STA_SYS.CENTR_FLG,  
+					 STA_SYS.DEALID2,  
+					 STA_SYS.LNKDN ,  
+					 DT.DEAL_HOST AS DEAL_HOST,  
+					 CAST(STA_SYS.ID AS CHAR(16)) AS DEAL_NUM,  
+					 STA_SYS.CDAS AS CDAS,  
+					 STA_SYS.CDAS AS PFI_CONTRACT_FLG ,  
+					 '' AS AGREEM_NUMBER ,  
+					 CAST(NULL AS DATE) AS SECUR_DELIV_DAT ,  
+					 CAST(NULL AS DATE) AS SECUR_PAYMNT_DAT ,  
+					 '' AS PORTF_TYPE ,  
+					 '' AS TRADE_TYPE ,  
+					 '' AS ISSUER_CNUM ,  
+					 STA_SYS.RESID ,  
+					 STA_SYS.MARKET_FLG ,  
+					 DT.KR_PFI_155_FLG ,  
+					 STA_SYS.REPORTING_DAT ,  
+					 STA_SYS.IDNT_ID ,  
+					 STA_SYS.DFN_ID,  
+					 DT.PKL_FLG,  
+					 DT."DESCRIPTOR"  
+					  
+					 FROM DWH.DEAL_00005 STA_SYS  
+					 LEFT JOIN DWH.DEAL_TYPES DT ON (STA_SYS.IDNT_ID, STA_SYS.DFN_ID) = (DT.IDNT_ID, DT.DFN_ID) ; 
+  
+LABEL ON COLUMN DWH.DEAL_STAV 
+( DEALID IS 'BARS DEAL ID' , 
+	LNKDN IS 'LINKED DEAL NUMBER' , 
+	PFI_CONTRACT_FLG IS 'HAS PFI CONTRACT' ) ; 
+  
+LABEL ON COLUMN DWH.DEAL_STAV 
+( ID TEXT IS 'ID' , 
+	DEALID TEXT IS 'BARS DEAL ID' , 
+	LNKDN TEXT IS 'LINKED DEAL NUMBER' , 
+	DEAL_HOST TEXT IS 'DEAL HOST' , 
+	"DESCRIPTOR" TEXT IS 'DEAL_DESCRIPTOR' ) ; 
+  
+CREATE VIEW DWH.DEAL_TYPES ( 
+	DAT , 
+	DATTO , 
+	IDNT_ID , 
+	DFN_ID , 
+	DFN_ACC_ID , 
+	"DESCRIPTOR" , 
+	DTYP , 
+	DLST , 
+	CDAS , 
+	DLST_NAME , 
+	DEAL_DESCR , 
+	SUBT_DESCR , 
+	MOD_CODE , 
+	PROD_CODE , 
+	PROD_DESCR , 
+	MODPROD , 
+	SUBPROD , 
+	DELIV_FLG , 
+	PFI_TYPE , 
+	CASH_FLG , 
+	BLNC_A_FLG , 
+	DEAL_HOST , 
+	MAIN_PART , 
+	DEAL_PTQTY , 
+	CHK_RESID , 
+	CHK_MARKET_FLG FOR COLUMN CHK_M00001 , 
+	CHK_BLNC_A_FLG FOR COLUMN CHK_B00001 , 
+	CHK_CASH_FLG_GEN FOR COLUMN CHK_C00001 , 
+	CHK_MINFIN , 
+	F401_PART , 
+	F401_GFROM , 
+	F401_GTO , 
+	POS_TYPE , 
+	CURCODE_D , 
+	CURCODE_O , 
+	RISK_TYPE , 
+	BLNC_G_FLG , 
+	KRS_FLG , 
+	KR_PFI_155_FLG FOR COLUMN KR_PF00001 , 
+	F134_FLG , 
+	F401_FLG , 
+	FVBAL_FLG , 
+	PKL_FLG ) 
+	AS 
+	SELECT  
+	 MAX (DEAL_TYPES_IDNT.DAT,DEAL_TYPES_DFN.DAT),  
+	 MIN (DEAL_TYPES_IDNT.DATTO,DEAL_TYPES_DFN.DATTO),  
+	 DEAL_TYPES_IDNT.ID ,  
+	 DEAL_TYPES_DFN.ID,  
+	 DEAL_TYPES_DFN.ACC_ID,  
+	 DEAL_TYPES_IDNT.DESCRIPTOR,  
+	 DEAL_TYPES_IDNT.DTYP,  
+	 DEAL_TYPES_IDNT.DLST,  
+	 DEAL_TYPES_IDNT.CDAS,  
+	 DEAL_TYPES_IDNT.DLST_NAME,  
+	 DEAL_TYPES_IDNT.DEAL_DESCR,  
+	 DEAL_TYPES_IDNT.SUBT_DESCR,  
+	 DEAL_TYPES_IDNT.MOD_CODE,  
+	 DEAL_TYPES_IDNT.PROD_CODE,  
+	 DEAL_TYPES_IDNT.PROD_DESCR,  
+	 DEAL_TYPES_IDNT.MODPROD,  
+	 DEAL_TYPES_IDNT.SUBPROD,  
+	 DEAL_TYPES_IDNT.DELIV_FLG,  
+	 DEAL_TYPES_IDNT.PFI_TYPE,  
+	 DEAL_TYPES_IDNT.CASH_FLG,  
+	 DEAL_TYPES_IDNT.BLNC_A_FLG,  
+	 DEAL_TYPES_IDNT.DEAL_HOST,  
+	 DEAL_TYPES_IDNT.MAIN_PART ,  
+	 DEAL_TYPES_IDNT.DEAL_PTQTY,  
+	 DEAL_TYPES_DFN.CHK_RESID,  
+	 DEAL_TYPES_DFN.CHK_MARKET_FLG,  
+	 DEAL_TYPES_DFN.CHK_BLNC_A_FLG,  
+	 DEAL_TYPES_DFN.CHK_CASH_FLG_GEN,  
+	 DEAL_TYPES_DFN.CHK_MINFIN,  
+	 DEAL_TYPES_DFN.F401_PART,  
+	 DEAL_TYPES_DFN.F401_GFROM,  
+	 DEAL_TYPES_DFN.F401_GTO,  
+	 DEAL_TYPES_DFN.POS_TYPE,  
+	 DEAL_TYPES_DFN.CURCODE_D,  
+	 DEAL_TYPES_DFN.CURCODE_O,  
+	 DEAL_TYPES_DFN.RISK_TYPE,  
+	 DEAL_TYPES_DFN.BLNC_G_FLG,  
+	 DEAL_TYPES_DFN.KRS_FLG,  
+	 DEAL_TYPES_DFN.KR_PFI_155_FLG,  
+	 DEAL_TYPES_DFN.F134_FLG,  
+	 DEAL_TYPES_DFN.F401_FLG,  
+	 DEAL_TYPES_DFN.FVBAL_FLG, 
+	 DEAL_TYPES_DFN.PKL_FLG  
+	 FROM  
+	 DWH.DEAL_00036 DEAL_TYPES_IDNT,  
+	 DWH.DEAL_00035 DEAL_TYPES_DFN 
+	 WHERE  
+	 DEAL_TYPES_IDNT.TYP_ID = DEAL_TYPES_DFN.TYP_ID AND  
+	 DEAL_TYPES_IDNT.DAT<=DEAL_TYPES_DFN.DATTO AND  
+	 DEAL_TYPES_IDNT.DATTO>=DEAL_TYPES_DFN.DAT ; 
+  
+LABEL ON TABLE DWH.DEAL_TYPES 
+	IS 'Deal Types' ; 
+  
+LABEL ON COLUMN DWH.DEAL_TYPES 
+( DAT TEXT IS 'DATE FROM' , 
+	DATTO TEXT IS 'DATE TO' , 
+	IDNT_ID TEXT IS 'DEAL IDNT ID' , 
+	DFN_ID TEXT IS 'DEAL CALC ID' , 
+	DFN_ACC_ID TEXT IS 'DEAL ACC ID' , 
+	"DESCRIPTOR" TEXT IS 'DEAL_DESCRIPTOR' , 
+	DTYP TEXT IS 'DEAL TYPE' , 
+	DLST TEXT IS 'DEAL SUBTYPE' , 
+	CDAS TEXT IS 'Customer deal a/c seq.no' , 
+	DLST_NAME TEXT IS 'SUBTYPE NAME' , 
+	DEAL_DESCR TEXT IS 'DEAL DESC' , 
+	SUBT_DESCR TEXT IS 'SUBTYPE DESC' , 
+	MOD_CODE TEXT IS 'MODULE CODE' , 
+	PROD_CODE TEXT IS 'PRODUCT CODE' , 
+	PROD_DESCR TEXT IS 'PRODUCT DESC' , 
+	MODPROD TEXT IS 'MODULE SHORT NAME' , 
+	SUBPROD TEXT IS 'SUBPROD. SHORT NAME' , 
+	DELIV_FLG TEXT IS 'IS DELIVERY?' , 
+	PFI_TYPE TEXT IS 'PFI TYPE' , 
+	CASH_FLG TEXT IS 'IS CASH?' , 
+	BLNC_A_FLG TEXT IS 'IS IN BALANCE A?' , 
+	DEAL_HOST TEXT IS 'DEAL HOST' , 
+	MAIN_PART TEXT IS 'MAIN PART' , 
+	DEAL_PTQTY TEXT IS 'QTY OF PARTS' , 
+	CHK_RESID TEXT IS 'Is resident?' , 
+	CHK_MARKET_FLG TEXT IS 'Is market deal?' , 
+	CHK_BLNC_A_FLG TEXT IS 'IS IN BALANCE A?' , 
+	CHK_CASH_FLG_GEN TEXT IS 'IS CASH?' , 
+	CHK_MINFIN TEXT IS 'IS Ministry of Finance?' , 
+	F401_PART TEXT IS 'F401 PART NUMBER' , 
+	F401_GFROM TEXT IS 'F401 FIELD FROM' , 
+	F401_GTO TEXT IS 'F401 FIELD TO' , 
+	POS_TYPE TEXT IS 'BALANCE POSITION' , 
+	CURCODE_D TEXT IS 'CURRENCY CODE FOR DEMAND' , 
+	CURCODE_O TEXT IS 'CURRENCY CODE FOR OBLIGATION' , 
+	RISK_TYPE TEXT IS 'RISK TYPE' , 
+	BLNC_G_FLG TEXT IS 'IS IN BALANCE G?' , 
+	KRS_FLG TEXT IS 'KRS FLAG' , 
+	KR_PFI_155_FLG TEXT IS 'KR_PFI_155_FLG' , 
+	F134_FLG TEXT IS 'F134_FLG' , 
+	F401_FLG TEXT IS 'F401_FLG' , 
+	FVBAL_FLG TEXT IS 'FVBAL FLG' , 
+	PKL_FLG TEXT IS 'PKL FLG' ) ; 
+  
+CREATE VIEW DWH.DEALS ( 
+	DLID , 
+	DLNO , 
+	DL , 
+	DAT , 
+	DATTO , 
+	VDAT , 
+	MDAT , 
+	DEALDAYS , 
+	CTPTY , 
+	SECUR_DEAL_TYPE FOR COLUMN SECUR00001 ) 
+	AS 
+	SELECT  
+		 D.ID AS DLID, TRIM(D.DLNO), D.DL,  
+		 COALESCE(X.DAT, L.DAT, E.DAT, D.DAT) AS DAT,  
+		 COALESCE(X.DATTO, L.DATTO, E.DATTO, D.DATTO) AS DATTO,  
+		 COALESCE(X.DDAT, L.VDAT, E.VDAT, SC.TRADD, SCR.VDAT_1P, D.DAT) AS VDAT,  
+		 COALESCE(X.VDAT, L.MDAT, E.MDAT,  
+		 CASE E.LNKDN  
+		 WHEN '000000' THEN D.DATTO  
+		 ELSE DATE('20' || SUBSTR(E.LNKDN, 5, 2) || '-' ||  
+		 SUBSTR(E.LNKDN, 3, 2) || '-' || SUBSTR(E.LNKDN, 1, 2))  
+		 END,  
+		 MAX(SC.MS_REAL_DATE, SC.VD_REAL_DATE),  
+		 SCR.VDAT_2P,  
+		 D.DATTO  
+		 ) AS MDAT,  
+		 DAYS(COALESCE(X.VDAT, L.MDAT, E.MDAT,  
+		 CASE E.LNKDN  
+		 WHEN '000000' THEN D.DATTO  
+		 ELSE DATE('20' || SUBSTR(E.LNKDN, 5, 2) || '-' ||  
+		 SUBSTR(E.LNKDN, 3, 2) || '-' || SUBSTR(E.LNKDN, 1, 2))  
+		 END,  
+		 MAX(SC.MS_REAL_DATE, SC.VD_REAL_DATE),  
+		 SCR.VDAT_2P,  
+		 D.DATTO))  
+		 - DAYS(COALESCE(X.DDAT, L.VDAT, E.VDAT, SC.TRADD, SCR.VDAT_1P, D.DAT)) AS DEALDAYS,  
+		 COALESCE(D.CTPTY, D.CNUM) AS CTPTY,  
+		 TRIM(COALESCE(SC.DEAL_TYPE, SCR.DEAL_TYPE)) AS SECUR_DEAL_TYPE  
+		FROM DWH.DELOTAB D  
+		LEFT JOIN DWH.DEXTAB X ON X.DEALID = D.ID  
+		LEFT JOIN DWH.LOANTAB L ON L.LOANID = D.ID  
+		LEFT JOIN DWH.DEALTAB E ON E.DEALID = D.ID  
+		LEFT JOIN DWH.SCDLTAB SC ON SC.SCDLID = D.ID  
+		LEFT JOIN DWH.SCDLTABRP SCR ON SCR.SCDLID = D.ID ; 
+  
+LABEL ON COLUMN DWH.DEALS 
+( DLID IS 'Deal id' , 
+	DLNO IS 'Deal Number' , 
+	DL IS 'Deal type' , 
+	DAT IS 'Start date interval of actiality' , 
+	DATTO IS 'Last date interval of actiality' , 
+	VDAT IS 'Deal value date' , 
+	MDAT IS 'Deal maturity date' , 
+	DEALDAYS IS 'Deal term' , 
+	CTPTY IS 'Deal contracting party cnum' , 
+	SECUR_DEAL_TYPE IS 'Securities''s deals type' ) ; 
+  
+LABEL ON COLUMN DWH.DEALS 
+( DLID TEXT IS 'Deal Id' ) ; 
+  
+CREATE VIEW DWH.DELOTAB_VW ( 
+	ID , 
+	DLNO , 
+	MIDASAC , 
+	CBAC , 
+	ACC2 , 
+	DAT , 
+	DATTO ) 
+	AS 
+	SELECT ID, 
+	 DLNO, 
+	 CNUM || CCY || SUBSTR(ACC, 1, 4) || CDAS || BRCA, 
+	 CBAC, 
+	 ACC2, 
+	 DAT, 
+	 DATTO 
+	 FROM DWH.DELOTAB ; 
+  
+LABEL ON COLUMN DWH.DELOTAB_VW 
+( ID IS 'Deal                Id' , 
+	DLNO IS 'Deal                Number' , 
+	CBAC IS 'CBR                 Account' , 
+	DAT IS 'Date                From' , 
+	DATTO IS 'Date                To' ) ; 
+  
+LABEL ON COLUMN DWH.DELOTAB_VW 
+( ID TEXT IS 'Deal Id' , 
+	DLNO TEXT IS 'Deal Number' , 
+	CBAC TEXT IS 'CBR Account' , 
+	DAT TEXT IS 'Date From' , 
+	DATTO TEXT IS 'Date To' ) ; 
+  
+CREATE VIEW DWH.DWHCXICL ( 
+--  SQL1506   30   Key or attribute for DWHCXICL in DWH ignored. 
+	XICFSR , 
+	XICFSA , 
+	XICFUS , 
+	XICFPW ) 
+	AS 
+	SELECT 
+	XICFSR , 
+	XICFSA , 
+	XICFUS , 
+	XICFPW   
+	FROM DWH.DWHCXICP 
+	  
+	RCDFMT @XICD      ; 
+  
+LABEL ON TABLE DWH.DWHCXICL 
+	IS 'CSDM ICD by FTP server name' ; 
+  
+LABEL ON COLUMN DWH.DWHCXICL 
+( XICFSR IS 'FTP server name' , 
+	XICFSA IS 'FTP server          IP address' , 
+	XICFUS IS 'FTP connection user' , 
+	XICFPW IS 'FTP connection      password' ) ; 
+  
+LABEL ON COLUMN DWH.DWHCXICL 
+( XICFSR TEXT IS 'FTP server name' , 
+	XICFSA TEXT IS 'FTP server IP address' , 
+	XICFUS TEXT IS 'FTP connection user' , 
+	XICFPW TEXT IS 'FTP connection password' ) ; 
+  
+CREATE VIEW DWH.DWHDXGSL ( 
+--  SQL1506   30   Key or attribute for DWHDXGSL in DWH ignored. 
+	GSID , 
+	GSFTP , 
+	GSSSL , 
+	GSPATH , 
+	GSFILE , 
+	GSSQL , 
+	GSSEP , 
+	GSMSGAID , 
+	GSXML ) 
+	AS 
+	SELECT 
+	GSID , 
+	GSFTP , 
+	GSSSL , 
+--  SQL150D   10   VALUES in column GSSSL ignored. 
+	GSPATH , 
+	GSFILE , 
+	GSSQL , 
+	GSSEP , 
+	GSMSGAID , 
+	GSXML   
+	FROM DWH.DWHDXGSP 
+	  
+	RCDFMT @DWHDXGS   ; 
+  
+LABEL ON TABLE DWH.DWHDXGSL 
+	IS 'DX generation settings by ID' ; 
+  
+LABEL ON COLUMN DWH.DWHDXGSL 
+( GSID IS 'ID щетмвм' , 
+	GSFTP IS 'Мевьжсное FTP' , 
+	GSSSL IS 'Хвтсп^щсшеь^ SSL' , 
+	GSPATH IS 'Оыь^ о тетои в DX' , 
+	GSFILE IS 'Хяу DX-йенпе' , 
+	GSSQL IS 'SQL-щетжсв' , 
+	GSSEP IS 'Ритежеьсж' , 
+	GSMSGAID IS 'Мевьжсное MQ' , 
+	GSXML IS 'Шефпср XML' ) ; 
+  
+LABEL ON COLUMN DWH.DWHDXGSL 
+( GSID TEXT IS 'ID щетмвм' , 
+	GSFTP TEXT IS 'Мевьжсное FTP' , 
+	GSSSL TEXT IS 'Хвтсп^щсшеь^ SSL' , 
+	GSPATH TEXT IS 'Оыь^ о тетои в DX' , 
+	GSFILE TEXT IS 'Хяу DX-йенпе' , 
+	GSSQL TEXT IS 'SQL-щетжсв' , 
+	GSSEP TEXT IS 'Ритежеьсж' , 
+	GSMSGAID TEXT IS 'Мевьжсное MQ' , 
+	GSXML TEXT IS 'Шефпср XML' ) ; 
+  
+CREATE VIEW DWH.DWHLBCAL ( 
+--  SQL1506   30   Key or attribute for DWHLBCAL in DWH ignored. 
+	DAT , 
+	HOL , 
+	CCY ) 
+	AS 
+	SELECT 
+	DAT , 
+	HOL , 
+	CCY   
+	FROM DWH.CAL 
+	WHERE 
+	( ( NOT HOL = 'X' ) OR HOL IS NULL ) AND 
+	( CCY = 'RUR' )   
+	RCDFMT CAL        ; 
+  
+LABEL ON TABLE DWH.DWHLBCAL 
+	IS 'Calendar of the Russian working days' ; 
+  
+CREATE VIEW DWH.DWHLBTXL ( 
+--  SQL1506   30   Key or attribute for DWHLBTXL in DWH ignored. 
+	LLVL , 
+	LJOB , 
+	LCMD , 
+	LRDY , 
+	LERR ) 
+	AS 
+	SELECT 
+	LLVL , 
+	LJOB , 
+	LCMD , 
+	LRDY , 
+	LERR   
+	FROM DWH.DWHLBTXP 
+	WHERE 
+	LRDY <> 'Y'   
+	RCDFMT @LISTPGM   ; 
+  
+LABEL ON TABLE DWH.DWHLBTXL 
+	IS 'TAXREP Adjusting table with working jobs' ; 
+  
+CREATE VIEW DWH.DWHLBTXM ( 
+--  SQL1506   30   Key or attribute for DWHLBTXM in DWH ignored. 
+	LLVL , 
+	LJOB , 
+	LCMD , 
+	LRDY , 
+	LERR ) 
+	AS 
+	SELECT 
+	LLVL , 
+	LJOB , 
+	LCMD , 
+	LRDY , 
+	LERR   
+	FROM DWH.DWHLBTXP 
+	WHERE 
+	LERR = 'Y'   
+	RCDFMT @LISTPGM   ; 
+  
+LABEL ON TABLE DWH.DWHLBTXM 
+	IS 'TAXREP Adjusting table with error in jobs' ; 
+  
+CREATE VIEW DWH.DWHMAFCL ( 
+--  SQL1506   30   Key or attribute for DWHMAFCL in DWH ignored. 
+	MACFLW , 
+	MACITM , 
+	MACUSE , 
+	MACITP , 
+	MACIQN , 
+	MACIKY , 
+	MACIKL , 
+	MACICT , 
+	MACDLY , 
+	MACEPG , 
+	MACEPL , 
+	MACOTP , 
+	MACOQN , 
+	MACOKY , 
+	MACOKL , 
+	MACOMT , 
+	MACOCT , 
+	MACEXP , 
+	MACMID , 
+	MACAID , 
+	MACRQN , 
+	MACRQM , 
+	MACDQL ) 
+	AS 
+	SELECT 
+	MACFLW , 
+	MACITM , 
+	MACUSE , 
+	MACITP , 
+	MACIQN , 
+	MACIKY , 
+	MACIKL , 
+	MACICT , 
+	MACDLY , 
+	MACEPG , 
+	MACEPL , 
+	MACOTP , 
+	MACOQN , 
+	MACOKY , 
+	MACOKL , 
+	MACOMT , 
+	MACOCT , 
+	MACEXP , 
+	MACMID , 
+	MACAID , 
+	MACRQN , 
+	MACRQM , 
+	MACDQL   
+	FROM DWH.DWHMAFCP 
+	  
+	RCDFMT DWHMAFCPF  ; 
+  
+LABEL ON TABLE DWH.DWHMAFCL 
+	IS 'Message Adapter flow configuration by out AppID' ; 
+  
+LABEL ON COLUMN DWH.DWHMAFCL 
+( MACFLW IS 'Flow' , 
+	MACITM IS 'Item' , 
+	MACUSE IS 'Used' , 
+	MACITP IS 'In type' , 
+	MACIQN IS 'In queue' , 
+	MACIKY IS 'In key/CID' , 
+	MACIKL IS 'In key/CID len.' , 
+	MACICT IS 'In conversion table' , 
+	MACDLY IS 'Wait, sec.' , 
+	MACEPG IS 'Program' , 
+	MACEPL IS 'Program lib.' , 
+	MACOTP IS 'Out type' , 
+	MACOQN IS 'Out queue' , 
+	MACOKY IS 'Out key/CID' , 
+	MACOKL IS 'Out key/CID len.' , 
+	MACOMT IS 'Out message type' , 
+	MACOCT IS 'Out conversion table' , 
+	MACEXP IS 'Expiration, hours' , 
+	MACMID IS 'Message ID' , 
+	MACAID IS 'Application ID' , 
+	MACRQN IS 'Reply to queue' , 
+	MACRQM IS 'Reply to QM' , 
+	MACDQL IS 'Data queue size' ) ; 
+  
+LABEL ON COLUMN DWH.DWHMAFCL 
+( MACFLW TEXT IS 'Flow' , 
+	MACITM TEXT IS 'Item' , 
+	MACUSE TEXT IS 'Used' , 
+	MACITP TEXT IS 'In type' , 
+	MACIQN TEXT IS 'In queue' , 
+	MACIKY TEXT IS 'In key/CID' , 
+	MACIKL TEXT IS 'In key/CID len.' , 
+	MACICT TEXT IS 'In conversion table' , 
+	MACDLY TEXT IS 'Wait, sec.' , 
+	MACEPG TEXT IS 'Program' , 
+	MACEPL TEXT IS 'Program lib.' , 
+	MACOTP TEXT IS 'Out type' , 
+	MACOQN TEXT IS 'Out queue' , 
+	MACOKY TEXT IS 'Out key/CID' , 
+	MACOKL TEXT IS 'Out key/CID len.' , 
+	MACOMT TEXT IS 'Out message type' , 
+	MACOCT TEXT IS 'Out conversion table' , 
+	MACEXP TEXT IS 'Expiration, hours' , 
+	MACMID TEXT IS 'Message ID' , 
+	MACAID TEXT IS 'Application ID' , 
+	MACRQN TEXT IS 'Reply to queue' , 
+	MACRQM TEXT IS 'Reply to QM' , 
+	MACDQL TEXT IS 'Data queue size' ) ; 
+  
+CREATE VIEW DWH.DWHMAFFL ( 
+--  SQL1506   30   Key or attribute for DWHMAFFL in DWH ignored. 
+	MAFFMT , 
+	MAFSEQ , 
+	MAFFLD , 
+	MAFLEN , 
+	MAFRFM , 
+	MAFRFL , 
+	MAFDIM , 
+	MAFTXT ) 
+	AS 
+	SELECT 
+	MAFFMT , 
+	MAFSEQ , 
+	MAFFLD , 
+	MAFLEN , 
+	MAFRFM , 
+	MAFRFL , 
+	MAFDIM , 
+	MAFTXT   
+	FROM DWH.DWHMAFFP 
+	  
+	RCDFMT DWHMAFFPF  ; 
+  
+LABEL ON TABLE DWH.DWHMAFFL 
+	IS 'Message Adapter message formats by format,field' ; 
+  
+LABEL ON COLUMN DWH.DWHMAFFL 
+( MAFFMT IS 'Format' , 
+	MAFSEQ IS 'Sequence' , 
+	MAFFLD IS 'Field' , 
+	MAFLEN IS 'Length' , 
+	MAFRFM IS 'Reference format' , 
+	MAFRFL IS 'Reference field' , 
+	MAFDIM IS 'Dimension' , 
+	MAFTXT IS 'Description' ) ; 
+  
+LABEL ON COLUMN DWH.DWHMAFFL 
+( MAFFMT TEXT IS 'Format' , 
+	MAFSEQ TEXT IS 'Sequence' , 
+	MAFFLD TEXT IS 'Field' , 
+	MAFLEN TEXT IS 'Length' , 
+	MAFRFM TEXT IS 'Reference format' , 
+	MAFRFL TEXT IS 'Reference field' , 
+	MAFDIM TEXT IS 'Dimension' , 
+	MAFTXT TEXT IS 'Description' ) ; 
+  
+CREATE VIEW DWH.F115DATA_MCV ( 
+	DAT , 
+	SPEC_KEY , 
+	RAZD , 
+	"RID" , 
+	ACID , 
+	BSAACID , 
+	AMNTAC , 
+	AMNTBC , 
+	RATE , 
+	RSRT , 
+	RACID , 
+	RBSAACID , 
+	COVER , 
+	CALC_REZBC , 
+	REZBC , 
+	RISKGROUP , 
+	PORTFOLIO , 
+	PORTF_ID , 
+	EXP_DAYS , 
+	PRCD , 
+	DELINQ_VALUE FOR COLUMN DELIN00001 , 
+	CCODE , 
+	CALC_CLT_REZBC FOR COLUMN CALC_00001 , 
+	PRKA_DO_30 , 
+	PRKA_DO_90 , 
+	PRKA_DO_180 FOR COLUMN PRKA_00001 , 
+	PRKA_SV_180 FOR COLUMN PRKA_00002 , 
+	PRKA_DO_360 FOR COLUMN PRKA_00003 , 
+	PRKA_SV_360 FOR COLUMN PRKA_00004 , 
+	CBI , 
+	IS_EXCLUDED FOR COLUMN IS_EX00001 , 
+	CORR_TS , 
+	CORR_USER , 
+	IS_MODIFIC , 
+	MANUAL ) 
+	AS 
+	SELECT 
+			F.DAT, 
+			F.SPEC_KEY, 
+			F.RAZD, 
+			F.RID, 
+			F.ACID, 
+			F.BSAACID, 
+			F.AMNTAC, 
+			F.AMNTBC, 
+			F.RATE, 
+			F.RSRT, 
+			F.RACID, 
+			F.RBSAACID, 
+			F.COVER, 
+			F.CALC_REZBC, 
+			F.REZBC, 
+			F.RISKGROUP, 
+			F.PORTFOLIO, 
+			F.PORTF_ID, 
+			F.EXP_DAYS, 
+			F.PRCD, 
+			F.DELINQ_VALUE, 
+			F.CCODE, 
+			F.CALC_CLT_REZBC, 
+			F.PRKA_DO_30, 
+			F.PRKA_DO_90, 
+			F.PRKA_DO_180, 
+			F.PRKA_SV_180, 
+			F.PRKA_DO_360, 
+			F.PRKA_SV_360, 
+			F.CBI, 
+			CAST('' AS CHAR(1))AS IS_EXCLUDED, 
+			CAST(NULL AS TIMESTAMP) AS CORR_TS, 
+			CAST('' AS VARCHAR(10)) AS CORR_USER, 
+			CAST('' AS CHAR(1)) AS IS_MODIFIC, 
+			CAST('' AS CHAR(1)) AS MANUAL 
+			FROM DWH.F115DATA F LEFT JOIN DWH.F115D00002 C ON F.DAT = C.DAT AND F.SPEC_KEY = C.SPEC_KEY 
+			WHERE C.DAT IS NULL 
+	  
+			UNION ALL 
+			SELECT 
+			F.DAT, 
+			F.SPEC_KEY , 
+			F.RAZD, 
+			F.RID, 
+			F.ACID, 
+			F.BSAACID, 
+			F.AMNTAC, 
+			F.AMNTBC, 
+			F.RATE, 
+			F.RSRT, 
+			F.RACID, 
+			F.RBSAACID, 
+			F.COVER, 
+			F.CALC_REZBC, 
+			F.REZBC, 
+			F.RISKGROUP, 
+			F.PORTFOLIO, 
+			F.PORTF_ID, 
+			F.EXP_DAYS, 
+			F.PRCD, 
+			F.DELINQ_VALUE, 
+			F.CCODE, 
+			F.CALC_CLT_REZBC, 
+			F.PRKA_DO_30, 
+			F.PRKA_DO_90, 
+			F.PRKA_DO_180, 
+			F.PRKA_SV_180, 
+			F.PRKA_DO_360, 
+			F.PRKA_SV_360, 
+			F.CBI, 
+			F.IS_EXCLUDED, 
+			F.CORR_TS, 
+			F.CORR_USER, 
+			CAST('Y' AS CHAR(1)) AS IS_MODIFIC, 
+			CAST('' AS CHAR(1)) AS MANUAL 
+			FROM DWH.F115D00002 F INNER JOIN DWH.F115DATA C ON F.DAT = C.DAT AND F.SPEC_KEY = C.SPEC_KEY 
+	  
+			UNION ALL 
+			SELECT 
+			F.DAT, 
+			F.SPEC_KEY , 
+			F.RAZD, 
+			F.RID, 
+			F.ACID, 
+			F.BSAACID, 
+			F.AMNTAC, 
+			F.AMNTBC, 
+			F.RATE, 
+			F.RSRT, 
+			F.RACID, 
+			F.RBSAACID, 
+			F.COVER, 
+			F.CALC_REZBC, 
+			F.REZBC, 
+			F.RISKGROUP, 
+			F.PORTFOLIO, 
+			F.PORTF_ID, 
+			F.EXP_DAYS, 
+			F.PRCD, 
+			F.DELINQ_VALUE, 
+			F.CCODE, 
+			F.CALC_CLT_REZBC, 
+			F.PRKA_DO_30, 
+			F.PRKA_DO_90, 
+			F.PRKA_DO_180, 
+			F.PRKA_SV_180, 
+			F.PRKA_DO_360, 
+			F.PRKA_SV_360, 
+			F.CBI, 
+			F.IS_EXCLUDED, 
+			F.CORR_TS, 
+			F.CORR_USER, 
+			CAST('Y' AS CHAR(1)) AS IS_MODIFIC, 
+			CAST('Y' AS CHAR(1)) AS MANUAL 
+			FROM DWH.F115D00002 F WHERE LEFT(F.SPEC_KEY,2)='M_' ; 
+  
+LABEL ON TABLE DWH.F115DATA_MCV 
+	IS 'Correction on F115DATA' ; 
+  
+CREATE VIEW DWH.F125DATA_V ( 
+	DAT , 
+	CCODE , 
+	ITEMID , 
+	PERID , 
+	AMNTBC ) 
+	AS 
+	( SELECT D.DAT, D.CCODE, D.ITEMID , CASE WHEN D.PERID IN (11, 15) THEN 11 ELSE D.PERID END PERID , DECIMAL(SUM(D.AMNTBC), 19) AMNTBC FROM DWH.F125DET D JOIN DWH.F125ITEMS I ON I.ITEMID=D.ITEMID WHERE D.PERID!=0 AND (I.ITEMTYPE='П' OR I.ITEMTYPE!='П' AND D.GRNO=1) GROUP BY D.DAT, D.CCODE, D.ITEMID , CASE WHEN D.PERID IN (11, 15) THEN 11 ELSE D.PERID END ) ; 
+  
+CREATE VIEW DWH.F125PER_V ( 
+	PERID , 
+	PERSQ , 
+	PERNM ) 
+	AS 
+	SELECT PERID, PERSQ, PERNM  
+		FROM DWH.F125PER  
+		WHERE PERID NOT IN (-1, 15) ; 
+  
+LABEL ON COLUMN DWH.F125PER_V 
+( PERID IS 'Period ID' , 
+	PERSQ IS 'Period Seq.Number' , 
+	PERNM IS 'Period Name' ) ; 
+  
+LABEL ON COLUMN DWH.F125PER_V 
+( PERID TEXT IS 'Period ID' , 
+	PERSQ TEXT IS 'Period Seq.Number' , 
+	PERNM TEXT IS 'Period Name' ) ; 
+  
+CREATE VIEW DWH.F303DATAV ( 
+	DAT , 
+	DATTO , 
+	STR_TYPE , 
+	STR_TYPE_DESC FOR COLUMN STR_T00001 , 
+	FCL_BRANCH , 
+	LOAN_BRANCH FOR COLUMN LOAN_00001 , 
+	ACC_BRANCH , 
+	ACC2_MAIN , 
+	ACC2_DUE , 
+	ACC2_MAIN_REZ FOR COLUMN ACC2_00001 , 
+	ACC2_DUE_REZ FOR COLUMN ACC2_00002 , 
+	MULTY , 
+	IS_CLOSE_FCL FOR COLUMN IS_CL00001 , 
+	IS_CLOSE_LOAN FOR COLUMN IS_CL00002 , 
+	CUSTOMER_NAME_P1_C1 FOR COLUMN CUSTO00001 , 
+	OGRN_C_P1_C2 FOR COLUMN OGRN_00001 , 
+	OGRN_IP_P1_C3 FOR COLUMN OGRN_00002 , 
+	INN_P1_C5 , 
+	OKPO_P1_C6 , 
+	COUNTRY_CODE_P1_C7 FOR COLUMN COUNT00001 , 
+	IS_SME_P1_C8 FOR COLUMN IS_SM00001 , 
+	FCL_CNUM_P1_A1 FOR COLUMN FCL_C00001 , 
+	FCL_SEGMENT_P1_A2 FOR COLUMN FCL_S00001 , 
+	BXCTYP_P1_A3 FOR COLUMN BXCTY00001 , 
+	RECD_P1_A4 , 
+	FCLID , 
+	FCL_CODE_P2_C1 FOR COLUMN FCL_C00002 , 
+	AGREEMENT_NUMBER_P2_C2 FOR COLUMN AGREE00001 , 
+	DTAP_P2_C3 , 
+	NUMBER_CONCESSION_P2_C4 FOR COLUMN NUMBE00001 , 
+	DTAP_CONCESSION_P2_C5 FOR COLUMN DTAP_00001 , 
+	CNAME_CONCESSION_P2_C6 FOR COLUMN CNAME00001 , 
+	OGRN_CONCESSION_P2_C7 FOR COLUMN OGRN_00003 , 
+	INN_CONCESSION_P2_C8 FOR COLUMN INN_C00001 , 
+	COUNTRY_CODE_CONCESSION_P2_C9 FOR COLUMN COUNT00002 , 
+	LIMIT_BSAACID FOR COLUMN LIMIT00001 , 
+	LIMIT_ACID , 
+	FCL_TYPE_P3_C1 FOR COLUMN FCL_T00001 , 
+	FCL_FAMT_P3_C4 FOR COLUMN FCL_F00001 , 
+	FCL_CCY_P3_C6 FOR COLUMN FCL_C00003 , 
+	FCL_DTEX_P3_C8 FOR COLUMN FCL_D00001 , 
+	FCL_INTR_P3_C11 FOR COLUMN FCL_I00001 , 
+	CODE_P3_C15 FOR COLUMN CODE_00001 , 
+	LINKED_FCLID_CODE_P3_C16 FOR COLUMN LINKE00001 , 
+	COMMONLIMIT_ID FOR COLUMN COMMO00001 , 
+	NARRATIVE_P3_A1 FOR COLUMN NARRA00001 , 
+	DRAWDOWN_ACC_P3_A2 FOR COLUMN DRAWD00001 , 
+	COLLAT_TYPE_P4_C1 FOR COLUMN COLLA00001 , 
+	COL_SUM_1_CAT_P4_C2 FOR COLUMN COL_S00001 , 
+	COL_SUM_2_CAT_P4_C3 FOR COLUMN COL_S00002 , 
+	COL_SUM_KOEF_P4_C4 FOR COLUMN COL_S00003 , 
+	ISSUER_CNUM_P4_A1 FOR COLUMN ISSUE00001 , 
+	ISSUER_NAME_P4_A2 FOR COLUMN ISSUE00002 , 
+	LOANID , 
+	LOANID_FIRST FOR COLUMN LOANI00001 , 
+	LOANID_OVERDUE FOR COLUMN LOANI00002 , 
+	LOAN_CNUM , 
+	LOAN_SEGMENT FOR COLUMN LOAN_00002 , 
+	LOAN_VDAT_P5_C1 FOR COLUMN LOAN_00003 , 
+	LOAN_NUMBER_P5_C2 FOR COLUMN LOAN_00004 , 
+	LOAN_AMOUNT_INITIAL_P5_C3 FOR COLUMN LOAN_00005 , 
+	LOAN_CCY_P5_C4 FOR COLUMN LOAN_00006 , 
+	OKATO_P5_C5 FOR COLUMN OKATO00001 , 
+	MAIN_BSAACID_P6_C1 FOR COLUMN MAIN_00001 , 
+	MAIN_ACID_P6_A1 FOR COLUMN MAIN_00002 , 
+	MAIN_AMOUNT_P6_C3 FOR COLUMN MAIN_00003 , 
+	DUE_BSAACID_P6_C2 FOR COLUMN DUE_B00001 , 
+	DUE_ACID_P6_A2 FOR COLUMN DUE_A00001 , 
+	DUE_AMOUNT_P6_C4 FOR COLUMN DUE_A00002 , 
+	RISKGROUP_P6_C5 FOR COLUMN RISKG00001 , 
+	IS_PORTF_P6_C6 FOR COLUMN IS_PO00001 , 
+	REZ_RATE_P6_C7 FOR COLUMN REZ_R00001 , 
+	REZ_AMOUNT_FACT_P6_C9 FOR COLUMN REZ_A00001 , 
+	MAIN_REZ_BSAACID_P6_A3 FOR COLUMN MAIN_00004 , 
+	MAIN_REZ_ACID_P6_A4 FOR COLUMN MAIN_00005 , 
+	MAIN_REZ_AMOUNT_FACT FOR COLUMN MAIN_00006 , 
+	MAIN_REZ_AMOUNT_P6_A5 FOR COLUMN MAIN_00007 , 
+	MAIN_REZ_DIFF_P6_A6 FOR COLUMN MAIN_00008 , 
+	DUE_REZ_BSAACID_P6_A7 FOR COLUMN DUE_R00001 , 
+	DUE_REZ_ACID_P6_A8 FOR COLUMN DUE_R00002 , 
+	DUE_REZ_AMOUNT_FACT FOR COLUMN DUE_R00003 , 
+	DUE_REZ_AMOUNT_P6_A9 FOR COLUMN DUE_R00004 , 
+	DUE_REZ_DIFF_P6_A10 FOR COLUMN DUE_R00005 , 
+	RSRT_MAIN_P6_A11 FOR COLUMN RSRT_00001 , 
+	RSRT_DUE_P6_A12 FOR COLUMN RSRT_00002 , 
+	INT_SUM_MAIN_P7_C1 FOR COLUMN INT_S00001 , 
+	INT_SUM_DUE_P7_C2 FOR COLUMN INT_S00002 , 
+	INT_REZ_SUM_P7_C5 FOR COLUMN INT_R00001 , 
+	INT_BSAACID_P7_A1 FOR COLUMN INT_B00001 , 
+	INT_ACID_P7_A2 FOR COLUMN INT_A00001 , 
+	INT_DUE_BSAACID_P7_A3 FOR COLUMN INT_D00001 , 
+	INT_DUE_ACID_P7_A4 FOR COLUMN INT_D00002 , 
+	INT_REZ_BSAACID_P7_A5 FOR COLUMN INT_R00002 , 
+	INT_REZ_ACID_P7_A6 FOR COLUMN INT_R00003 , 
+	INT_REZ_MAIN_SUM_P7_A7 FOR COLUMN INT_R00004 , 
+	INT_REZ_DUE_BSAACID_P7_A8 FOR COLUMN INT_R00005 , 
+	INT_REZ_DUE_ACID_P7_A9 FOR COLUMN INT_R00006 , 
+	INT_REZ_DUE_SUM_P7_A10 FOR COLUMN INT_R00007 , 
+	UNUSED_LIMIT_P8_C1 FOR COLUMN UNUSE00001 , 
+	DUE_DATE_START_P9_C8 FOR COLUMN DUE_D00001 , 
+	DUE_DATE_END_P9_C9 FOR COLUMN DUE_D00002 ) 
+	AS 
+	SELECT 
+	 DAT, 
+	 DATTO, 
+	 STR_TYPE, 
+	 STR_TYPE_DESC, 
+	 TRIM(FCL_BRANCH) AS FCL_BRANCH, 
+	 TRIM(LOAN_BRANCH) AS LOAN_BRANCH, 
+	 TRIM(ACC_BRANCH) AS ACC_BRANCH, 
+	 TRIM(ACC2_MAIN) AS ACC2_MAIN, 
+	 TRIM(ACC2_DUE) AS ACC2_DUE, 
+	 TRIM(ACC2_MAIN_REZ) AS ACC2_MAIN_REZ, 
+	 TRIM(ACC2_DUE_REZ) AS ACC2_DUE_REZ, 
+	 MULTY, 
+	 IS_CLOSE_FCL, 
+	 IS_CLOSE_LOAN, 
+	 TRIM(CUSTOMER_NAME_P1_C1) AS CUSTOMER_NAME_P1_C1, 
+	 TRIM(OGRN_C_P1_C2) AS OGRN_C_P1_C2, 
+	 TRIM(OGRN_IP_P1_C3) AS OGRN_IP_P1_C3, 
+	 TRIM(INN_P1_C5) AS INN_P1_C5, 
+	 TRIM(OKPO_P1_C6) AS OKPO_P1_C6, 
+	 TRIM(COUNTRY_CODE_P1_C7) AS COUNTRY_CODE_P1_C7, 
+	 IS_SME_P1_C8, 
+	 TRIM(FCL_CNUM_P1_A1) AS FCL_CNUM_P1_A1, 
+	 FCL_SEGMENT_P1_A2, 
+	 BXCTYP_P1_A3, 
+	 RECD_P1_A4, 
+	 FCLID, 
+	 FCL_CODE_P2_C1, 
+	 AGREEMENT_NUMBER_P2_C2, 
+	 DTAP_P2_C3, 
+	 NUMBER_CONCESSION_P2_C4, 
+	 DTAP_CONCESSION_P2_C5, 
+	 CNAME_CONCESSION_P2_C6, 
+	 OGRN_CONCESSION_P2_C7, 
+	 INN_CONCESSION_P2_C8, 
+	 COUNTRY_CODE_CONCESSION_P2_C9, 
+	 TRIM(LIMIT_BSAACID) AS LIMIT_BSAACID, 
+	 TRIM(LIMIT_ACID) AS LIMIT_ACID, 
+	 TRIM(FCL_TYPE_P3_C1) AS FCL_TYPE_P3_C1, 
+	 DWH.CALCAMOUNTBYCUR(FCL_FAMT_P3_C4, COALESCE(FCL_CCY_P3_C6, LOAN_CCY_P5_C4)) AS FCL_FAMT_P3_C4, 
+	 TRIM(FCL_CCY_P3_C6) AS FCL_CCY_P3_C6, 
+	 FCL_DTEX_P3_C8, 
+	 FCL_INTR_P3_C11, 
+	 CODE_P3_C15, 
+	 LINKED_FCLID_CODE_P3_C16, 
+	 COMMONLIMIT_ID, 
+	 NARRATIVE_P3_A1, 
+	 TRIM(DRAWDOWN_ACC_P3_A2) AS DRAWDOWN_ACC_P3_A2, 
+	 COLLAT_TYPE_P4_C1, 
+	 DWH.CALCAMOUNTBYCUR(COL_SUM_1_CAT_P4_C2, '810') AS COL_SUM_1_CAT_P4_C2, 
+	 DWH.CALCAMOUNTBYCUR(COL_SUM_2_CAT_P4_C3, '810') AS COL_SUM_2_CAT_P4_C3, 
+	 DWH.CALCAMOUNTBYCUR(COL_SUM_KOEF_P4_C4, '810') AS COL_SUM_KOEF_P4_C4, 
+	 TRIM(ISSUER_CNUM_P4_A1) AS ISSUER_CNUM_P4_A1, 
+	 ISSUER_NAME_P4_A2, 
+	 LOANID, 
+	 LOANID_FIRST, 
+	 LOANID_OVERDUE, 
+	 TRIM(LOAN_CNUM) AS LOAN_CNUM, 
+	 LOAN_SEGMENT, 
+	 LOAN_VDAT_P5_C1, 
+	 TRIM(LOAN_NUMBER_P5_C2) AS LOAN_NUMBER_P5_C2, 
+	 DWH.CALCAMOUNTBYCUR(LOAN_AMOUNT_INITIAL_P5_C3, LOAN_CCY_P5_C4) AS LOAN_AMOUNT_INITIAL_P5_C3, 
+	 TRIM(LOAN_CCY_P5_C4) AS LOAN_CCY_P5_C4, 
+	 TRIM(OKATO_P5_C5) AS OKATO_P5_C5, 
+	 TRIM(MAIN_BSAACID_P6_C1) AS MAIN_BSAACID_P6_C1, 
+	 TRIM(MAIN_ACID_P6_A1) AS MAIN_ACID_P6_A1, 
+	 DWH.CALCAMOUNTBYCUR(MAIN_AMOUNT_P6_C3, '810') AS MAIN_AMOUNT_P6_C3, 
+	 TRIM(DUE_BSAACID_P6_C2) AS DUE_BSAACID_P6_C2, 
+	 TRIM(DUE_ACID_P6_A2) AS DUE_ACID_P6_A2, 
+	 DWH.CALCAMOUNTBYCUR(DUE_AMOUNT_P6_C4, '810') AS DUE_AMOUNT_P6_C4, 
+	 RISKGROUP_P6_C5, 
+	 IS_PORTF_P6_C6, 
+	 REZ_RATE_P6_C7, 
+	 DWH.CALCAMOUNTBYCUR(REZ_AMOUNT_FACT_P6_C9, '810') AS REZ_AMOUNT_FACT_P6_C9, 
+	 TRIM(MAIN_REZ_BSAACID_P6_A3) AS MAIN_REZ_BSAACID_P6_A3, 
+	 TRIM(MAIN_REZ_ACID_P6_A4) AS MAIN_REZ_ACID_P6_A4, 
+	 DWH.CALCAMOUNTBYCUR(MAIN_REZ_AMOUNT_FACT, '810') AS MAIN_REZ_AMOUNT_FACT, 
+	 DWH.CALCAMOUNTBYCUR(MAIN_REZ_AMOUNT_P6_A5, '810') AS MAIN_REZ_AMOUNT_P6_A5, 
+	 DWH.CALCAMOUNTBYCUR(MAIN_REZ_DIFF_P6_A6, '810') AS MAIN_REZ_DIFF_P6_A6, 
+	 TRIM(DUE_REZ_BSAACID_P6_A7) AS DUE_REZ_BSAACID_P6_A7, 
+	 TRIM(DUE_REZ_ACID_P6_A8) AS DUE_REZ_ACID_P6_A8, 
+	 DWH.CALCAMOUNTBYCUR(DUE_REZ_AMOUNT_FACT, '810') AS DUE_REZ_AMOUNT_FACT, 
+	 DWH.CALCAMOUNTBYCUR(DUE_REZ_AMOUNT_P6_A9, '810') AS DUE_REZ_AMOUNT_P6_A9, 
+	 DWH.CALCAMOUNTBYCUR(DUE_REZ_DIFF_P6_A10, '810') AS DUE_REZ_DIFF_P6_A10, 
+	 RSRT_MAIN_P6_A11, 
+	 RSRT_DUE_P6_A12, 
+	 DWH.CALCAMOUNTBYCUR(INT_SUM_MAIN_P7_C1, '810') AS INT_SUM_MAIN_P7_C1, 
+	 DWH.CALCAMOUNTBYCUR(INT_SUM_DUE_P7_C2, '810') AS INT_SUM_DUE_P7_C2, 
+	 DWH.CALCAMOUNTBYCUR(INT_REZ_SUM_P7_C5, '810') AS INT_REZ_SUM_P7_C5, 
+	 TRIM(INT_BSAACID_P7_A1) AS INT_BSAACID_P7_A1, 
+	 TRIM(INT_ACID_P7_A2) AS INT_ACID_P7_A2, 
+	 TRIM(INT_DUE_BSAACID_P7_A3) AS INT_DUE_BSAACID_P7_A3, 
+	 TRIM(INT_DUE_ACID_P7_A4) AS INT_DUE_ACID_P7_A4, 
+	 TRIM(INT_REZ_BSAACID_P7_A5) AS INT_REZ_BSAACID_P7_A5, 
+	 TRIM(INT_REZ_ACID_P7_A6) AS INT_REZ_ACID_P7_A6, 
+	 DWH.CALCAMOUNTBYCUR(INT_REZ_MAIN_SUM_P7_A7, '810') AS INT_REZ_MAIN_SUM_P7_A7, 
+	 TRIM(INT_REZ_DUE_BSAACID_P7_A8) AS INT_REZ_DUE_BSAACID_P7_A8, 
+	 TRIM(INT_REZ_DUE_ACID_P7_A9) AS INT_REZ_DUE_ACID_P7_A9, 
+	 DWH.CALCAMOUNTBYCUR(INT_REZ_DUE_SUM_P7_A10, '810') AS INT_REZ_DUE_SUM_P7_A10, 
+	 DWH.CALCAMOUNTBYCUR(UNUSED_LIMIT_P8_C1, '810' ) AS UNUSED_LIMIT_P8_C1, 
+	 DUE_DATE_START_P9_C8, 
+	 DUE_DATE_END_P9_C9 
+	 FROM 
+	 DWH.F303DATA ; 
+  
+CREATE VIEW DWH.F401_CTL1V ( 
+	DAT , 
+	DATTO , 
+	MODPROD , 
+	SUBPROD , 
+	DELIV_FLG , 
+	PFI_TYPE , 
+	AC_TYPE , 
+	ACID , 
+	BSAACID ) 
+	AS 
+	SELECT MAX(DTA.DAT, ACC.DRLNO) AS DAT, 
+	 MIN(DTA.DATTO, ACC.DRLNC) AS DATTO, 
+	 DTA.MODPROD, 
+	 DTA.SUBPROD, 
+	 DTA.DELIV_FLG, 
+	 DTA.PFI_TYPE, 
+	 'DEMAND' AS AC_TYPE, 
+	 ACC.ACID, 
+	 ACC.BSAACID 
+	FROM DWH.DEAL_00034 DTA 
+	 JOIN DWH.ACCRLN ACC ON DTA.ACOD_DMND_52601 = ACC.GLACOD AND 
+	 CASE WHEN VALUE(DTA.SEQ_DMND_52601,'') = '' 
+	 THEN 1 
+	 ELSE CASE WHEN DTA.SEQ_DMND_52601 = SUBSTR(ACC.ACID,16,2) 
+	 THEN 1 
+	 ELSE 0 
+	 END 
+	 END = 1 AND 
+	 ACC.RLNTYPE = '0' 
+	WHERE VALUE(ACC.ACID,'') <> '' 
+	GROUP BY MAX(DTA.DAT, ACC.DRLNO), 
+	 MIN(DTA.DATTO, ACC.DRLNC), 
+	 DTA.MODPROD, 
+	 DTA.SUBPROD, 
+	 DTA.DELIV_FLG, 
+	 DTA.PFI_TYPE, 
+	 ACC.ACID, 
+	 ACC.BSAACID 
+	UNION 
+	SELECT MAX(DTA.DAT, ACC.DRLNO) AS DAT, 
+	 MIN(DTA.DATTO, ACC.DRLNC) AS DATTO, 
+	 DTA.MODPROD, 
+	 DTA.SUBPROD, 
+	 DTA.DELIV_FLG, 
+	 DTA.PFI_TYPE, 
+	 'OBLIGATION' AS AC_TYPE, 
+	 ACC.ACID, 
+	 ACC.BSAACID 
+	FROM DWH.DEAL_00034 DTA 
+	 JOIN DWH.ACCRLN ACC ON DTA.ACOD_OBLG_52602 = ACC.GLACOD AND 
+	 CASE WHEN VALUE(DTA.SEQ_OBLG_52602,'') = '' 
+	 THEN 1 
+	 ELSE CASE WHEN DTA.SEQ_OBLG_52602 = SUBSTR(ACC.ACID,16,2) 
+	 THEN 1 
+	 ELSE 0 
+	 END 
+	 END = 1 AND 
+	 ACC.RLNTYPE = '0' 
+	WHERE VALUE(ACC.ACID,'') <> '' 
+	GROUP BY MAX(DTA.DAT, ACC.DRLNO), 
+	 MIN(DTA.DATTO, ACC.DRLNC), 
+	 DTA.MODPROD, 
+	 DTA.SUBPROD, 
+	 DTA.DELIV_FLG, 
+	 DTA.PFI_TYPE, 
+	 ACC.ACID, 
+	 ACC.BSAACID ; 
+  
+LABEL ON TABLE DWH.F401_CTL1V 
+	IS 'Deal Types and Demand / Obligations accounts' ; 
+  
+LABEL ON COLUMN DWH.F401_CTL1V 
+( DAT IS 'DATE FROM' , 
+	DATTO IS 'DATE TO' , 
+	MODPROD IS 'Product module short name' , 
+	SUBPROD IS 'Subproduct short name' , 
+	DELIV_FLG IS 'Delivery flag' , 
+	PFI_TYPE IS 'PFI type' , 
+	AC_TYPE IS 'Demand or  Obligation Account' , 
+	ACID IS 'Obligation Account ID' , 
+	BSAACID IS 'Account ID' ) ; 
+  
+LABEL ON COLUMN DWH.F401_CTL1V 
+( DAT TEXT IS 'DATE FROM' , 
+	DATTO TEXT IS 'DATE TO' , 
+	MODPROD TEXT IS 'Product module short name' , 
+	SUBPROD TEXT IS 'Subproduct short name' , 
+	DELIV_FLG TEXT IS 'Delivery flag' , 
+	PFI_TYPE TEXT IS 'PFI type' , 
+	AC_TYPE TEXT IS 'Demand or  Obligation Account' , 
+	ACID TEXT IS 'Obligation Account ID' , 
+	BSAACID TEXT IS 'Account ID' ) ; 
+  
+CREATE VIEW DWH.F401_PDV ( 
+	PDID , 
+	CORID , 
+	DEAL_ID , 
+	POD , 
+	ACCGR , 
+	ACCSUBGR , 
+	MODPROD , 
+	SUBPROD , 
+	PFI_TYPE , 
+	DELIV_FLG , 
+	KONDORN , 
+	DLNO , 
+	DLNO2 , 
+	AGREEM_NUMBER FOR COLUMN AGREE00001 , 
+	DTYP , 
+	DLST , 
+	RECI , 
+	DDAT , 
+	CASH_FLG , 
+	CNUM , 
+	PRCD , 
+	RECD , 
+	VALD , 
+	"INOUT" , 
+	IS_CONTR , 
+	IS_BONUS , 
+	ACID_DB , 
+	BSAACID_DB , 
+	ACID_CR , 
+	BSAACID_CR , 
+	ACC_MAIN , 
+	AMNT_DB , 
+	AMNT_CR , 
+	AMNT_DB_BC , 
+	AMNT_CR_BC , 
+	PNAR , 
+	RNARLNG , 
+	PDEXTDLID , 
+	SECTION , 
+	PD_DTID , 
+	PD_CTID , 
+	PD_ID , 
+	PD_ID_CRS , 
+	IS_DELETED ) 
+	AS 
+	SELECT  
+				F401_PD.ID AS PDID,  
+				F401_PDCOR.ID AS CORID,  
+				VALUE(F401_PDCOR.DEAL_ID,F401_PD.DEAL_ID) AS DEAL_ID,  
+				VALUE(F401_PDCOR.POD,F401_PD.POD) AS POD,  
+				F401_PD.ACCGR AS ACCGR,  
+				F401_PD.ACCSUBGR AS ACCSUBGR,  
+				DEAL_STAV.MODPROD AS MODPROD,  
+				DEAL_STAV.SUBPROD AS SUBPROD,  
+				DEAL_STAV.PFI_TYPE AS PFI_TYPE,  
+				DEAL_STAV.DELIV_FLG AS DELIV_FLG,  
+				DEAL_STAV.KONDORN AS KONDORN,  
+				DEAL_STAV.DLNO AS DLNO,  
+				DEAL_STAV.DLNO2 AS DLNO2,  
+				DEAL_STAV.AGREEM_NUMBER,  
+				DEAL_STAV.DTYP AS DTYP,  
+				DEAL_STAV.DLST AS DLST,  
+				DEAL_STAV.RECI AS RECI,  
+				DEAL_STAV.DDAT AS DDAT,  
+				DEAL_STAV.CASH_FLG AS CASH_FLG,  
+				DEAL_STAV.CNUM AS CNUM,  
+				CBCTP.PRCD AS PRCD,  
+				CBCTP.RECD AS RECD,  
+				VALUE(F401_PDCOR.VALD, F401_PD.POD) AS VALD,  --берем POD т.к. для проводок с invisible<>1 это является датой валютирования 
+				VALUE(F401_PDCOR.INOUT, F401_PDG.INOUT) AS INOUT,  
+				VALUE(F401_PDCOR.IS_CONTR, F401_PDG.IS_CONTR) AS IS_CONTR,  
+				VALUE(F401_PDCOR.IS_BONUS, F401_PDG.IS_BONUS) AS IS_BONUS,  
+				CASE 	  
+					WHEN F401_PDCOR.ACID_DB IS NOT NULL THEN F401_PDCOR.ACID_DB  
+					WHEN ACCGR = 1 THEN F401_PD.ACID  
+					WHEN ACCGR = 2 THEN F401_PD.ACID_CRS  
+					ELSE NULL END  
+					AS ACID_DB,  
+				CASE  
+					WHEN F401_PDCOR.BSAACID_DB IS NOT NULL THEN F401_PDCOR.BSAACID_DB  
+					WHEN ACCGR = 1 THEN PD.BSAACID  
+					WHEN ACCGR = 2 THEN PD1.BSAACID  
+					ELSE NULL END  
+					AS BSAACID_DB,  
+				CASE 	  
+					WHEN F401_PDCOR.ACID_CR IS NOT NULL THEN F401_PDCOR.ACID_CR  
+					WHEN ACCGR = 1 THEN F401_PD.ACID_CRS  
+					WHEN ACCGR = 2 THEN F401_PD.ACID  
+					ELSE NULL END  
+					AS ACID_CR,  
+				CASE 	  
+					WHEN F401_PDCOR.BSAACID_CR IS NOT NULL THEN F401_PDCOR.BSAACID_CR  
+					WHEN ACCGR = 1 THEN PD1.BSAACID  
+					WHEN ACCGR = 2 THEN PD.BSAACID  
+					ELSE NULL END  
+					AS BSAACID_CR,  
+				CASE 	  
+					WHEN ACCGR = 1 THEN 'DB'  
+					WHEN ACCGR = 2 THEN 'CR'  
+					ELSE NULL END  
+					AS ACC_MAIN,  
+				CASE 	  
+					WHEN F401_PDCOR.AMNT_DB IS NOT NULL THEN F401_PDCOR.AMNT_DB  
+					WHEN ACCGR = 1 THEN ABS(PD.AMNT)  
+					WHEN ACCGR = 2 THEN ABS(PD1.AMNT)  
+					ELSE NULL END  
+					AS AMNT_DB,  
+				CASE 	  
+					WHEN F401_PDCOR.AMNT_CR IS NOT NULL THEN F401_PDCOR.AMNT_CR  
+					WHEN ACCGR = 1 THEN ABS(PD1.AMNT)  
+					WHEN ACCGR = 2 THEN ABS(PD.AMNT)  
+					ELSE NULL END  
+					AS AMNT_CR,  
+				CASE 	  
+					WHEN F401_PDCOR.AMNT_DB_BC IS NOT NULL THEN F401_PDCOR.AMNT_DB_BC  
+					WHEN ACCGR = 1 THEN ABS(PD.AMNTBC)  
+					WHEN ACCGR = 2 THEN ABS(PD1.AMNTBC)  
+					ELSE NULL END  
+					AS AMNT_DB_BC,  
+				CASE 	  
+					WHEN F401_PDCOR.AMNT_CR_BC IS NOT NULL THEN F401_PDCOR.AMNT_CR_BC  
+					WHEN ACCGR = 1 THEN ABS(PD1.AMNTBC)  
+					WHEN ACCGR = 2 THEN ABS(PD.AMNTBC)  
+					ELSE NULL END  
+					AS AMNT_CR_BC,  
+				PD.PNAR AS PNAR,  
+				PDEXT2.RNARLNG AS RNARLNG,  
+				PDEXT.DLID AS PDEXTDLID,  
+				VALUE(F401_PDCOR.SECTION,F401_PDG.SECTION) AS SECTION,  
+				CASE 	  
+					WHEN ACCGR = 1 THEN F401_PD.PD_ID  
+					WHEN ACCGR = 2 THEN F401_PD.PD_ID_CRS  
+					ELSE NULL END  
+					AS PD_DTID,  
+				CASE 	  
+					WHEN ACCGR = 1 THEN F401_PD.PD_ID_CRS  
+					WHEN ACCGR = 2 THEN F401_PD.PD_ID  
+					ELSE NULL END  
+					AS PD_CTID,  
+				  
+				F401_PD.PD_ID,  
+				F401_PD.PD_ID_CRS,  
+				VALUE( F401_PD.IS_DELETED, '0' ) AS IS_DELETED  
+				  
+				FROM DWH.F401_PD F401_PD	  
+				 LEFT JOIN DWH.F401_PDCOR F401_PDCOR ON F401_PDCOR.PD_ID = F401_PD.PD_ID AND  
+				 F401_PDCOR.PD_ID_CRS = F401_PD.PD_ID_CRS  
+				 LEFT JOIN DWH.DEAL_STAV DEAL_STAV ON VALUE(F401_PDCOR.POD,F401_PD.POD) BETWEEN DEAL_STAV.DAT AND DEAL_STAV.DATTO AND VALUE(F401_PDCOR.DEAL_ID,F401_PD.DEAL_ID)=DEAL_STAV.DEALID  
+				 LEFT JOIN DWH.SDCUSTPD SDCUSTPD ON F401_PD.CNUM = SDCUSTPD.BBCUST  
+				 LEFT JOIN DWH.CBCTP CBCTP ON SDCUSTPD.BXCTYP=CBCTP.CTYPE  
+				 LEFT JOIN DWH.F401_PDG F401_PDG ON (F401_PD.ACCGR, F401_PD.ACCSUBGR) = (F401_PDG.GR, F401_PDG.SUBGR) AND VALUE(F401_PDCOR.POD,F401_PD.POD) BETWEEN F401_PDG.DAT AND F401_PDG.DATTO  
+				 LEFT JOIN DWH.PD PD ON F401_PD.PD_ID = PD.ID  
+				 LEFT JOIN DWH.PD PD1 ON F401_PD.PD_ID_CRS = PD1.ID  
+				 LEFT JOIN DWH.CURRATES CURRATES ON (PD.POD, 'USD') = (CURRATES.DAT, CURRATES.CCY)  
+				 LEFT JOIN DWH.PDEXT PDEXT ON PD.ID = PDEXT.ID  
+				 LEFT JOIN DWH.PDEXT2 PDEXT2 ON PD.ID = PDEXT2.ID  
+				  
+				UNION  
+				SELECT  
+					CAST(NULL AS BIGINT) AS PDID,  
+					F401_PDCOR.ID AS CORID,  
+					F401_PDCOR.DEAL_ID AS DEAL_ID,  
+					F401_PDCOR.POD AS POD,  
+					CAST (NULL AS INT) AS ACCGR,  
+					CAST (NULL AS INT) AS ACCSUBGR,  
+					'' AS MODPROD,  
+					'' AS SUBPROD,  
+					'' AS PFI_TYPE,  
+					'' AS DELIV_FLG,  
+					'' AS KONDORN,  
+					'' AS DLNO,  
+					'' AS DLNO2,  
+				 '' AS AGREEM_NUMBER,  
+					'' AS DTYP,  
+					'' AS DLST,  
+					'' AS RECI,  
+					CAST(NULL AS DATE) AS DDAT,  
+					'' AS CASH_FLG,  
+					'' AS CNUM,  
+					'' AS PRCD,  
+					'' AS RECD,  
+					F401_PDCOR.VALD AS VALD,  
+					F401_PDCOR.INOUT AS INOUT,  
+					F401_PDCOR.IS_CONTR AS IS_CONTR,  
+					F401_PDCOR.IS_BONUS AS IS_BONUS,  
+					F401_PDCOR.ACID_DB AS ACID_DB,  
+					F401_PDCOR.BSAACID_DB AS BSAACID_DB,  
+					F401_PDCOR.ACID_CR AS ACID_CR,  
+					F401_PDCOR.BSAACID_CR AS BSAACID_CR,  
+					'' AS ACC_MAIN,  
+					F401_PDCOR.AMNT_DB AS AMNT_DB,  
+					F401_PDCOR.AMNT_CR AS AMNT_CR,  
+					F401_PDCOR.AMNT_DB_BC AS AMNT_DB_BC,  
+					F401_PDCOR.AMNT_CR_BC AS AMNT_CR_BC,  
+					'' AS PNAR,  
+					'' AS RNARLNG,  
+					CAST(NULL AS INT) AS PDEXTDLID,  
+				 F401_PDCOR.SECTION,  
+					CAST(NULL AS BIGINT) AS PD_DTID,  
+					CAST(NULL AS BIGINT) AS PD_CTID,  
+				 F401_PDCOR.PD_ID,  
+				 F401_PDCOR.PD_ID_CRS,  
+					'0' AS IS_DELETED  
+				FROM  
+				DWH.F401_PDCOR F401_PDCOR  
+				WHERE F401_PDCOR.PD_ID IS NULL ; 
+  
+LABEL ON COLUMN DWH.F401_PDV 
+( ACCGR IS 'Main account group' , 
+	ACCSUBGR IS 'Main account subgroup' , 
+	MODPROD IS 'MODULE SHORT NAME' , 
+	SUBPROD IS 'SUBPROD. SHORT NAME' , 
+	PFI_TYPE IS 'PFI TYPE' , 
+	DELIV_FLG IS 'IS DELIVERY?' , 
+	KONDORN IS 'KONDOR DEAL NUMBER' , 
+	DLNO IS 'MIDAS DEAL NUMBER' , 
+	DLNO2 IS 'MAIN PART NUMBER' , 
+	AGREEM_NUMBER IS 'Agreement number' , 
+	DTYP IS 'DEAL TYPE' , 
+	DLST IS 'DEAL SUBTYPE' , 
+	RECI IS 'STATUS' , 
+	DDAT IS 'DEAL DATE' , 
+	CASH_FLG IS 'IS CASH?' , 
+	CNUM IS 'CUSTOMER NUMEBER' , 
+	RNARLNG IS 'Russian Narrative Long' , 
+	PDEXTDLID IS 'Deal/Loan ID' , 
+	PD_ID IS 'Main posting id' , 
+	PD_ID_CRS IS 'Corresponding posting id' ) ; 
+  
+LABEL ON COLUMN DWH.F401_PDV 
+( PDID TEXT IS 'ID' , 
+	CORID TEXT IS 'ID' , 
+	ACCGR TEXT IS 'Main account group' , 
+	ACCSUBGR TEXT IS 'Main account subgroup' , 
+	MODPROD TEXT IS 'MODULE SHORT NAME' , 
+	SUBPROD TEXT IS 'SUBPROD. SHORT NAME' , 
+	PFI_TYPE TEXT IS 'PFI TYPE' , 
+	DELIV_FLG TEXT IS 'IS DELIVERY?' , 
+	KONDORN TEXT IS 'KONDOR DEAL NUMBER' , 
+	DLNO TEXT IS 'MIDAS DEAL NUMBER' , 
+	DLNO2 TEXT IS 'MAIN PART NUMBER' , 
+	AGREEM_NUMBER TEXT IS 'Agreement number' , 
+	DTYP TEXT IS 'DEAL TYPE' , 
+	DLST TEXT IS 'DEAL SUBTYPE' , 
+	RECI TEXT IS 'STATUS' , 
+	DDAT TEXT IS 'DEAL DATE' , 
+	CASH_FLG TEXT IS 'IS CASH?' , 
+	CNUM TEXT IS 'CUSTOMER NUMEBER' , 
+	RNARLNG TEXT IS 'Russian Narrative Long' , 
+	PDEXTDLID TEXT IS 'Deal/Loan ID' , 
+	PD_ID TEXT IS 'Main posting id' , 
+	PD_ID_CRS TEXT IS 'Corresponding posting id' ) ; 
+  
+CREATE VIEW DWH.F401AS1_FULL ( 
+	ALG , 
+	BALNO1 , 
+	LINEID1 , 
+	TERM1 , 
+	LINECD1 , 
+	CTRYPR1 , 
+	BNKPR1 , 
+	YR_MO1 , 
+	IS_CB ) 
+	AS 
+	WITH A ( ALG, BALNO1, LINEID1, TERM1, LINECD1, CTRYPR1, BNKPR1, YR_MO1, IS_CB ) AS ( SELECT SL.ALG, SA.BALNO1, SL.LINEID1, SL.TERM1, SL.LINECD1 , SA.CTRYPR1, SA.BNKPR1, SA.YR_MO1, SA.IS_CB FROM DWH.GCPL401S1 SL JOIN DWH.GCPA401S1 SA ON SL.LINEID1=SA.LINEID1 WHERE SL.ALG!='' AND SL.TITL1!='Y' AND SL.TERM1!='' UNION SELECT SL.ALG, SA.BALNO1, SL.LINEID1, SL.TERM1, SL.LINECD1 , SA.CTRYPR1, SA.BNKPR1, SA.YR_MO1, SA.IS_CB FROM DWH.GCPL401S1 SL JOIN DWH.GCPA401S1 SA ON SL.LINEID2=SA.LINEID1 WHERE SL.ALG!='' AND SL.TITL1!='Y' AND SL.TERM1!='' ) SELECT B.* FROM ( SELECT ALG, BALNO1, LINEID1, TERM1, LINECD1 , MAX(CTRYPR1) CTRYPR1, MAX(BNKPR1) BNKPR1 , MIN(YR_MO1) YR_MO1, MAX(IS_CB) IS_CB FROM A GROUP BY ALG, BALNO1, LINEID1, TERM1, LINECD1 ) B, DWH.F401_YR_MO Y WHERE Y.YR_MO>=COALESCE(B.YR_MO1, 197001) ; 
+  
+CREATE VIEW DWH.F401BS1_FULL ( 
+	LINEID1 , 
+	BALNO1 , 
+	ACOD1 , 
+	CTYPE1 , 
+	CTRCD1 , 
+	YR_MO1 , 
+	IS_CB ) 
+	AS 
+	WITH A (LINEID1, BALNO1, ACOD1, CTYPE1, CTRCD1, YR_MO1, IS_CB) AS 
+	( 
+	SELECT L.LINEID1, B.BALNO1, B.ACOD1, B.CTYPE1, B.CTRCD1, B.YR_MO1, B.IS_CB 
+	FROM DWH.GCPB401S1 B 
+	JOIN DWH.GCPL401S1 L ON B.LINEID1=L.LINEID1 
+	WHERE L.ALG!='' AND L.TITL1!='Y' AND L.TERM1!='' 
+	 UNION 
+	SELECT L.LINEID1, B.BALNO1, B.ACOD1, B.CTYPE1, B.CTRCD1, B.YR_MO1, B.IS_CB 
+	FROM DWH.GCPB401S1 B 
+	JOIN DWH.GCPL401S1 L ON B.LINEID1=L.LINEID2 
+	WHERE L.ALG!='' AND L.TITL1!='Y' AND L.TERM1!='' 
+	) 
+	SELECT B.* 
+	FROM  
+	( 
+	SELECT  
+	 LINEID1, BALNO1, ACOD1, CTYPE1 
+	, MAX(CTRCD1) CTRCD1, MIN(YR_MO1) YR_MO1, MAX(IS_CB) IS_CB 
+	FROM A 
+	GROUP BY LINEID1, BALNO1, ACOD1, CTYPE1 
+	) B, DWH.F401_YR_MO Y 
+	WHERE Y.YR_MO>=COALESCE(B.YR_MO1, 197001) ; 
+  
+CREATE VIEW DWH.F401MBTH15 ( 
+	SECT , 
+	TERM1 , 
+	ALG , 
+	LINEID1 , 
+	CTRYPR1 , 
+	BNKPR1 , 
+	ACC2 , 
+	BSAACID , 
+	ACID , 
+	CCODE , 
+	GLACOD , 
+	PSAV , 
+	CTYPE , 
+	BBCOLC , 
+	CTRCD , 
+	GLCCY , 
+	A_YR_MO , 
+	A_IS_CB , 
+	B_YR_MO , 
+	B_IS_CB ) 
+	AS 
+	SELECT SUBSTR(SL.LINECD1, 1, 2) AS SECT, SL.TERM1, SL.ALG  
+	, SA.LINEID1, SA.CTRYPR1, SA.BNKPR1  
+	, AC.ACC2, AC.BSAACID, AC.ACID, AC.CCODE, AC.GLACOD, AC.PSAV  
+	, CUST.BXCTYP CTYPE,  
+	--баг 591. Для БС2 с GCPA401S1.CTRYPR1='Y' значение BBCOLC определяется значением GCPB401S1.CTRCD1 
+	CASE WHEN SA.CTRYPR1='Y' AND TRIM(VALUE(SB.CTRCD1,''))<>'' THEN SB.CTRCD1  
+	 ELSE VALUE(F.CTRCD, CTRY.A2, QQQQ.CTRCD1, CUST.CTRCD) END AS BBCOLC,  --изменено, баг 591 
+	'99' AS CTRCD, CY.GLCCY  
+	, SA.YR_MO1 A_YR_MO, SA.IS_CB A_IS_CB, SB.YR_MO1 B_YR_MO, SB.IS_CB B_IS_CB  
+	FROM DWH.GCPL401S1 SL, DWH.F401_YR_MO Y  
+	JOIN DWH.GCPA401S1 SA ON SL.LINEID1=SA.LINEID1  
+	LEFT JOIN DWH.GCPB401S1 SB ON SB.LINEID1=SA.LINEID1 AND SB.BALNO1=SA.BALNO1  
+	 AND Y.YR_MO>=COALESCE(SB.YR_MO1, 197001) AND SB.ACOD1 <> '****' 
+	LEFT JOIN DWH.GCPB401S1 QQQQ ON QQQQ.LINEID1=SA.LINEID1 AND QQQQ.BALNO1=SA.BALNO1  
+	 AND Y.YR_MO>=COALESCE(QQQQ.YR_MO1, 197001) AND QQQQ.ACOD1 = '****'  -- баг 18025 
+	JOIN DWH.ACCRLN401 AC ON AC.ACC2=SA.BALNO1 AND AC.GLACOD=COALESCE(SB.ACOD1, AC.GLACOD)  
+	JOIN DWH.CURRENCY CY ON CY.CBCCY=AC.CBCCY  
+	JOIN ( SELECT BBCUST, RECD, PRCD, BXCTYP, BBBNBI  
+	, CASE WHEN PRCD = 'B'  
+	 THEN  -- баг 14384 
+	 CASE WHEN SUBSTR(BBCSID,5,2)<>'' THEN SUBSTR(BBCSID,5,2)  -- SWIFT 
+	 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC ELSE BBCNCZ END END  
+	 ELSE CASE WHEN BBCNCZ NOT IN ('', 'RU') THEN BBCNCZ  -- баг 14633 
+	 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC  
+	 ELSE CASE WHEN TRIM(VALUE(BXCNCO, ''))='' THEN 'RU' ELSE BXCNCO END END  
+	 END END AS CTRCD FROM DWH.SDCUSTPD  
+	) CUST ON CUST.BBCUST = AC.CNUM 
+	 AND CUST.BXCTYP = VALUE(SB.CTYPE1, CUST.BXCTYP)  -- баг 17024 
+	LEFT JOIN DWH.F401CUST F ON F.CNUM=CUST.BBCUST  
+	LEFT JOIN ( SELECT DISTINCT A2  
+	 FROM DWH.COUNT00006 CC, DWH.F401_YR_MO Y  
+	 WHERE DATE(LEFT(TRIM(CHAR(Y.YR_MO)), 4)  
+	 || '-' || RIGHT(TRIM(CHAR(Y.YR_MO)), 2) || '-01') + 1 MONTH - 1 DAY  
+	 BETWEEN CC.DAT AND CC.DATTO  
+	) CTRY ON CTRY.A2 <> 'RU' AND SA.CTRYPR1 NOT IN ('', 'N')  
+	AND ( CTRY.A2 = SUBSTR(CY.GLCCY, 1, 2)  
+	 OR (SL.LINECD1='1А1' AND CY.GLCCY IN ('EUR', 'DEM') AND CTRY.A2 = 'DE'))  
+	WHERE SL.TITL1!='Y'  
+	AND (SA.BNKPR1=' ' OR SA.BNKPR1=CUST.BBBNBI)  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                   	AND Y.YR_MO>=COALESCE(SA.YR_MO1, 197001)  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                       	AND (TRIM(VALUE( NULLIF( TRIM(VALUE(SB.CTRCD1, '')), ''), F.CTRCD, '')) <> ''  
+                                                                                                                                                                                                                                                                                                                                                                                                                                  	 OR CUST.BXCTYP=24  -- условия включения по клиенту: 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            	 OR (SA.CTRYPR1 IN ('', 'N') AND CUST.RECD='N' /* AND CUST.CTRCD<>'RU' */ )  
+	 OR CTRY.A2 IS NOT NULL  -- SA.CTRYPR1 проверено при join CTRY (!) 
+	 OR (SA.CTRYPR1='Y' AND QQQQ.CTRCD1 IS NOT NULL AND SUBSTR(CY.GLCCY, 1, 2) <> 'RU')  -- баг 18025 
+	) ; 
+  
+LABEL ON COLUMN DWH.F401MBTH15 
+( BSAACID IS 'BSA Account ID' , 
+	ACID IS 'GL Account ID' ) ; 
+  
+LABEL ON COLUMN DWH.F401MBTH15 
+( ACC2 TEXT IS 'BSS Account' , 
+	BSAACID TEXT IS 'BSA Account ID' , 
+	ACID TEXT IS 'GL Account ID' , 
+	CCODE TEXT IS 'Company Code' , 
+	GLACOD TEXT IS 'Account Code' , 
+	PSAV TEXT IS 'Passive/Active Indicator' ) ; 
+  
+CREATE VIEW DWH.F401NOREPO6C ( 
+	LINEID1 , 
+	SECT , 
+	BSAACID , 
+	ACID , 
+	PSAV , 
+	CCODE , 
+	ACC2 , 
+	CTYPE , 
+	BBCOLC , 
+	CTRCD , 
+	GLCCY ) 
+	AS 
+	SELECT L.LINEID1, SUBSTR(L.LINECD1, 1, 2) AS SECT,  
+		A.BSAACID, A.ACID, A.PSAV, A.CCODE, A.ACC2  
+		, CUST.BXCTYP AS CTYPE, VALUE(F.CTRCD, CUST.CTRCD) AS BBCOLC, '99' AS CTRCD, CY.GLCCY  
+		FROM DWH.GCPL401S1 L  
+		JOIN DWH.GCPC401S1 C ON C.LINEID61=L.LINEID1  
+		JOIN DWH.ACCRLN401 A ON A.GLACOD=C.ACOD61 AND A.ACC2<>'' 
+		JOIN DWH.CURRENCY CY ON A.CBCCY=CY.CBCCY  
+		JOIN ( SELECT BBCUST, RECD, PRCD, BXCTYP, BBBNBI  
+		, CASE WHEN PRCD = 'B'  
+		 THEN  -- баг 14384 
+		 CASE WHEN SUBSTR(BBCSID,5,2)<>'' THEN SUBSTR(BBCSID,5,2)  -- SWIFT 
+		 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC ELSE BBCNCZ END END  
+		 ELSE CASE WHEN BBCNCZ NOT IN ('', 'RU') THEN BBCNCZ  -- баг 14633 
+		 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC  
+		 ELSE CASE WHEN TRIM(VALUE(BXCNCO, ''))='' THEN 'RU' ELSE BXCNCO END END  
+		 END END AS CTRCD FROM DWH.SDCUSTPD  
+		) CUST ON A.CNUM=CUST.BBCUST  
+		LEFT JOIN DWH.F401CUST F ON F.CNUM=CUST.BBCUST  
+		WHERE L.ALG!='2' AND C.CTYP61='C'  
+		AND A.INCL!='1'  
+		AND NOT EXISTS ( SELECT 1 FROM DWH.IMBCBBRP WHERE A8BICN=A.CNUM )  
+		AND (C.BNKPR61='' OR CUST.BBBNBI=C.BNKPR61)  
+		AND (TRIM(VALUE(F.CTRCD, '')) <> ''  
+		 OR CUST.BXCTYP=24  -- условия включения по клиенту: 
+		 OR (CUST.RECD='N' /* AND CUST.CTRCD<>'RU' */ )) ; 
+  
+LABEL ON COLUMN DWH.F401NOREPO6C 
+( BSAACID IS 'BSA Account ID' , 
+	ACID IS 'GL Account ID' ) ; 
+  
+LABEL ON COLUMN DWH.F401NOREPO6C 
+( BSAACID TEXT IS 'BSA Account ID' , 
+	ACID TEXT IS 'GL Account ID' , 
+	PSAV TEXT IS 'Passive/Active Indicator' , 
+	CCODE TEXT IS 'Company Code' , 
+	ACC2 TEXT IS 'BSS Account' ) ; 
+  
+CREATE VIEW DWH.F401S2LC ( 
+	LINEID2 , 
+	CTYPE ) 
+	AS 
+	(  
+		SELECT A.LINEID2, C.CTYPE  
+		FROM DWH.GCPA401S2 A  
+		JOIN DWH.CBCTP C ON A.PRCD=C.PRCD  
+		 UNION  
+		SELECT A.LINEID2, C.CTYPE  
+		FROM DWH.GCPA401S2 A  
+		JOIN DWH.CBCTP C ON A.CTYPE=C.CTYPE  
+		) ; 
+  
+CREATE VIEW DWH.F401S3P6 ( 
+	LINEID3 , 
+	SECT , 
+	BSAACID , 
+	ACID , 
+	PSAV , 
+	CCODE , 
+	ACC2 , 
+	CNUM , 
+	CTYPE , 
+	BBCOLC , 
+	GLCCY , 
+	CTRCD , 
+	CTYP63 , 
+	ACID_401 ) 
+	AS 
+	SELECT L.LINEID3, SUBSTR(L.LINECD3, 1, 2) AS SECT,  
+	A.BSAACID, A.ACID, A.PSAV, A.CCODE, A.ACC2, A.CNUM 
+	, CUST.BXCTYP AS CTYPE, VALUE(F.CTRCD, CUST.CTRCD) AS BBCOLC 
+	, CY.GLCCY, '99' AS CTRCD, C.CTYP63 
+	, A.ACID_401  -- Добавляем поле ACID_401 (баг 9926) 
+	FROM DWH.GCPL401S3 L 
+	JOIN DWH.GCPC401S3 C ON C.LINEID63=L.LINEID3 
+	JOIN DWH.ACCRLN401 A ON A.GLACOD=C.ACOD63 
+	JOIN DWH.CURRENCY CY ON A.CBCCY=CY.CBCCY 
+	JOIN ( SELECT BBCUST, RECD, PRCD, BXCTYP, BBBNBI 
+	, CASE WHEN PRCD = 'B' 
+	 THEN  -- баг 14384 
+	 CASE WHEN SUBSTR(BBCSID,5,2)<>'' THEN SUBSTR(BBCSID,5,2)  -- SWIFT 
+	 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC ELSE BBCNCZ END END 
+	 ELSE CASE WHEN BBCNCZ NOT IN ('', 'RU') THEN BBCNCZ  -- баг 14633 
+	 ELSE CASE WHEN BBCOLC NOT IN ('', 'RU') THEN BBCOLC  
+	 ELSE CASE WHEN TRIM(VALUE(BXCNCO, ''))='' THEN 'RU' ELSE BXCNCO END END 
+	 END END AS CTRCD FROM DWH.SDCUSTPD 
+	) CUST ON A.CNUM=CUST.BBCUST 
+	LEFT JOIN DWH.F401CUST F ON F.CNUM=CUST.BBCUST 
+	WHERE ( C.CTYP63='B' AND EXISTS (SELECT 1 FROM DWH.IMBCBBRP WHERE A8BICN=A.CNUM) 
+	 OR C.CTYP63='C' AND (C.BNKPR63='' OR CUST.BBBNBI=C.BNKPR63)) 
+	AND (TRIM(VALUE(F.CTRCD, '')) <> ''  
+	 OR CUST.BXCTYP=24  -- условия включения по клиенту: 
+	 OR (CUST.RECD='N' /* AND CUST.CTRCD<>'RU' */ )) ; 
+  
+LABEL ON COLUMN DWH.F401S3P6 
+( BSAACID IS 'BSA Account ID' , 
+	ACID IS 'GL Account ID' ) ; 
+  
+LABEL ON COLUMN DWH.F401S3P6 
+( BSAACID TEXT IS 'BSA Account ID' , 
+	ACID TEXT IS 'GL Account ID' , 
+	PSAV TEXT IS 'Passive/Active Indicator' , 
+	CCODE TEXT IS 'Company Code' , 
+	ACC2 TEXT IS 'BSS Account' , 
+	CNUM TEXT IS 'Customer Number' ) ; 
+  
+CREATE VIEW DWH.F401S4LC ( 
+	LINEID4 , 
+	CTYPE ) 
+	AS 
+	(  
+		SELECT A.LINEID4, C.CTYPE  
+		FROM DWH.GCPA401S4 A  
+		JOIN DWH.CBCTP C ON A.PRCD=C.PRCD  
+		 UNION  
+		SELECT A.LINEID4, C.CTYPE  
+		FROM DWH.GCPA401S4 A  
+		JOIN DWH.CBCTP C ON A.CTYPE=C.CTYPE  
+		) ; 
+  
+CREATE VIEW DWH.F402_FEE_V ( 
+	ID , 
+	ACC_CODE , 
+	ACC_NAME , 
+	DT_CT , 
+	SERVICE_CODE FOR COLUMN SERVI00001 , 
+	SERVICE_NAME FOR COLUMN SERVI00002 , 
+	STATUS , 
+	CHANGE_DATE FOR COLUMN CHANG00001 , 
+	CHANGE_USER FOR COLUMN CHANG00002 ) 
+	AS 
+	SELECT 
+		F.ID, 
+		F.ACC_CODE, 
+		A.A5ACCN AS ACC_NAME, 
+		F.DT_CT, 
+		F.SERVICE_CODE, 
+		S.C402CN AS SERVICE_NAME, 
+		F.STATUS, 
+		F.CHANGE_DATE, 
+		F.CHANGE_USER 
+	FROM 
+		DWH.F402_FEE F, 
+		DWH.SDACODPD A, 
+		DWH.ACC42SCL S 
+	WHERE 
+		F.ACC_CODE=A.A5ACCD AND 
+		F.SERVICE_CODE=S.C402SC ; 
+  
+LABEL ON TABLE DWH.F402_FEE_V 
+	IS 'View F402_FEE with names' ; 
+  
+LABEL ON COLUMN DWH.F402_FEE_V 
+( ID IS 'Record ID' , 
+	ACC_CODE IS 'I/E account code' , 
+	DT_CT IS 'Debit/Credit ind.' , 
+	SERVICE_CODE IS 'Service code' , 
+	SERVICE_NAME IS 'Service code name' , 
+	STATUS IS 'Last change type' , 
+	CHANGE_DATE IS 'Last change date' , 
+	CHANGE_USER IS 'Last change user' ) ; 
+  
+LABEL ON COLUMN DWH.F402_FEE_V 
+( ID TEXT IS 'Record ID' , 
+	ACC_CODE TEXT IS 'I/E account code' , 
+	DT_CT TEXT IS 'Debit/Credit ind.' , 
+	SERVICE_CODE TEXT IS 'Service code' , 
+	SERVICE_NAME TEXT IS 'Service code name' , 
+	STATUS TEXT IS 'Last change type' , 
+	CHANGE_DATE TEXT IS 'Last change date' , 
+	CHANGE_USER TEXT IS 'Last change user' ) ; 
+  
+CREATE VIEW DWH.FAIR_VAL_SECURV ( 
+	DAT , 
+	SCDLID , 
+	SECID , 
+	PORTFOLIO_TYPE_ID FOR COLUMN PORTF00001 , 
+	BSAACID , 
+	ACID , 
+	CBCCY , 
+	IAGRN , 
+	FV_BALANCE , 
+	CBAC , 
+	RCBAC , 
+	CBBC , 
+	CORRECT , 
+	QNTY , 
+	IS_PFI ) 
+	AS 
+	SELECT SCBAL.DAT, 
+	 SCBAL.SCDLID, 
+	 SCBAL.SECID, 
+	 SCBAL.PORTFOLIO_TYPE_ID, 
+	 SCBAL.BSAACID, 
+	 SCBAL.ACID, 
+	 SCBAL.CBCCY, 
+	 SCBAL.IAGRN, 
+	 -SCBAL.RCBAC AS FV_BALANCE, 
+	 SCBAL.CBAC, 
+	 SCBAL.RCBAC, 
+	 SCBAL.CBBC, 
+	 SCBAL.CORRECT, 
+	 SCBAL.QNTY, 
+	 LTAB.IS_PFI_DEAL	AS IS_PFI 
+	FROM DWH.SCBAL SCBAL 
+	 INNER JOIN DWH.SCDLTAB_T LTAB	ON SCBAL.SCDLID = LTAB.SCDLID AND 
+						 SCBAL.DAT BETWEEN LTAB.DAT AND LTAB.DATTO 
+	WHERE SCBAL.OPID IN(22,23) ; 
+  
+LABEL ON COLUMN DWH.FAIR_VAL_SECURV 
+( DAT IS 'Balance_Date' , 
+	SCDLID IS 'Deal ID' , 
+	SECID IS 'Security ID' , 
+	PORTFOLIO_TYPE_ID IS 'Portfoli type' , 
+	BSAACID IS 'ACCRLN field' , 
+	ACID IS 'Asset_Subaccount/Liability_Subaccount/Reval_Subaccount' , 
+	CBCCY IS 'ACCRLN.CBCCY' , 
+	IAGRN IS 'IMB_Agreem_Number' , 
+	FV_BALANCE IS 'Reval_Amount' , 
+	CBAC IS 'Reval amount in minor units' , 
+	RCBAC IS 'CBAC rounded to integer' , 
+	CBBC IS 'Reval amount*100' , 
+	CORRECT IS 'Data correctness flag' , 
+	QNTY IS 'Secur_Quantity from vHVB_TermDealsGLInfo' , 
+	IS_PFI IS 'Fair vale is taken into account on 52601/52602' ) ; 
+  
+CREATE VIEW DWH.FAIR_VALV ( 
+	DNUM302P , 
+	KONDORN , 
+	DLNO , 
+	DAT , 
+	DATTO , 
+	FV_CCY , 
+	FV_BALANCE , 
+	FV_DIFFERENCE FOR COLUMN FV_DI00001 , 
+	"TYPE" , 
+	PROD_CODE , 
+	MOD_CODE , 
+	DAT_CHANGE , 
+	DAT_DELETE , 
+	ACID , 
+	IS_ACTIVE_2 FOR COLUMN IS_AC00001 , 
+	IS_PFI_2 , 
+	IS_EXPIRED_2 FOR COLUMN IS_EX00001 , 
+	START_DATE , 
+	END_DATE , 
+	DEAL_HOST , 
+	DEAL_NUM , 
+	MODPROD , 
+	SUBPROD ) 
+	AS 
+	SELECT  
+				FV.DNUM302P ,  
+				VALUE(C_KC.KONDORN_COR, FV.KONDORN) AS KONDORN,  
+		 SUBSTR(CHAR(INT(VALUE(C_DC.DLNO_COR, FV.DLNO)) + 1000000), 2,6) AS DLNO,  
+				FV.DAT ,  
+				FV.DATTO ,  
+				FV.FV_CCY ,  
+				CASE  
+					WHEN C123.FLAG_ZERO = 1 THEN 0  
+					WHEN C123.FV_BAL_COR IS NOT NULL THEN C123.FV_BAL_COR  
+					ELSE FV_BALANCE  
+				END FV_BALANCE,  
+				FV.FV_DIFFERENCE,  
+				FV.TYPE ,  
+				VALUE(C_MPC.PROD_CODE_COR, FV.PROD_CODE) AS PROD_CODE,  
+				VALUE(C_MPC.MOD_CODE_COR, FV.MOD_CODE) AS MOD_CODE,  
+				FV.DAT_CHANGE ,  
+				FV.DAT_DELETE ,  
+				FV.ACID ,  
+				FV.IS_ACTIVE_2,  
+				FV.IS_PFI_2 ,  
+				FV.IS_EXPIRED_2 ,  
+				FV.START_DATE ,  
+				FV.END_DATE,  
+				DT.DEAL_HOST,  
+				CASE  
+					WHEN DT.DEAL_HOST = 'KONDORN' THEN VALUE(C_KC.KONDORN_COR, FV.KONDORN)  
+					WHEN DT.DEAL_HOST = 'MIDAS' THEN SUBSTR(CHAR(INT(VALUE(C_DC.DLNO_COR, FV.DLNO)) + 1000000), 2,6)  
+					ELSE ''  
+				END DEAL_NUM,  
+				DT.MODPROD,  
+				DT.SUBPROD  
+			FROM  
+				DWH.FAIR_VAL FV  
+				LEFT JOIN DWH.FV_CORR C123 ON C123.DNUM302P = FV.DNUM302P AND FV.DAT BETWEEN C123.DAT AND C123.DATTO AND NOT (C123.FV_BAL_COR IS NULL AND C123.FLAG_ZERO IS NULL AND C123.FLAG_DEL IS NULL)  
+				LEFT JOIN DWH.FV_CORR C_DC ON C_DC.DNUM302P = FV.DNUM302P AND FV.DAT BETWEEN C_DC.DAT AND C_DC.DATTO AND C_DC.DLNO_COR IS NOT NULL  
+				LEFT JOIN DWH.FV_CORR C_MPC ON C_MPC.DNUM302P = FV.DNUM302P AND FV.DAT BETWEEN C_MPC.DAT AND C_MPC.DATTO AND NOT (C_MPC.MOD_CODE_COR IS NULL AND C_MPC.PROD_CODE_COR IS NULL)  
+				LEFT JOIN DWH.FV_CORR C_KC ON C_KC.DNUM302P = FV.DNUM302P AND FV.DAT BETWEEN C_KC.DAT AND C_KC.DATTO AND NOT (C_KC.KONDORN_COR IS NULL)  
+				LEFT JOIN (  
+					SELECT PROD_CODE, MOD_CODE, DEAL_HOST, MODPROD, SUBPROD  
+					FROM DWH.DEAL_TYPES  
+					WHERE CURRENT DATE BETWEEN DAT AND DATTO  
+					GROUP BY PROD_CODE, MOD_CODE, DEAL_HOST, MODPROD, SUBPROD  
+				) DT ON (DT.PROD_CODE, DT.MOD_CODE) = (VALUE(C_MPC.PROD_CODE_COR, FV.PROD_CODE), VALUE(C_MPC.MOD_CODE_COR, FV.MOD_CODE))  
+			WHERE FV.IS_OBSOLETE = 0 AND VALUE(C123.FLAG_DEL, 0) = 0 ; 
+  
+LABEL ON COLUMN DWH.FAIR_VALV 
+( MODPROD IS 'MODULE SHORT NAME' , 
+	SUBPROD IS 'SUBPROD. SHORT NAME' ) ; 
+  
+LABEL ON COLUMN DWH.FAIR_VALV 
+( DEAL_HOST TEXT IS 'DEAL HOST' , 
+	MODPROD TEXT IS 'MODULE SHORT NAME' , 
+	SUBPROD TEXT IS 'SUBPROD. SHORT NAME' ) ; 
+  
+CREATE VIEW DWH.GCPPDLLETT ( 
+	MDAT , 
+	DLNO , 
+	BRCA , 
+	ACID , 
+	BSAACID , 
+	LLETT , 
+	CNNA , 
+	VDAT , 
+	AMNT , 
+	ID ) 
+	AS 
+	SELECT VALUE(B.MDAT, CAST('20'||SUBSTR(B.LNKDN,5,2)||'-'||SUBSTR(B.LNKDN,3,2)  
+		 ||'-'||SUBSTR(B.LNKDN,1,2) AS DATE)) MDAT, A.DLNO DLNO, A.BRCA BRCA, LTRIM  
+		 (RTRIM(A.CNUM))||LTRIM(RTRIM(A.CCY))||LTRIM(RTRIM(A.ACC))||LTRIM(RTRIM(  
+		 A.CDAS))||LTRIM(RTRIM(A.BRCA)) ACID, A.CBAC BSAACID, A.LLETT LLETT, B.CNNA  
+		 CNNA, B.VDAT VDAT, B.OPAM AMNT, A.ID ID  
+		 FROM (DWH.DELOTAB A  
+		 INNER JOIN (  
+		 SELECT LACID  
+		 FROM DWH.GCPLLETT) D  
+		 ON D.LACID = A.ACC )  
+		 LEFT JOIN DWH.DEALTAB B  
+		 ON A.ID = B.DEALID  
+		 AND A.DATTO = B.DATTO ; 
+  
+LABEL ON COLUMN DWH.GCPPDLLETT 
+( DLNO IS 'Deal                Number' , 
+	BRCA IS 'Branch              Code-Alpha' , 
+	BSAACID IS 'CBR                 Account' , 
+	CNNA IS 'Confirmation        Narrative' , 
+	VDAT IS 'Value               Date' , 
+	AMNT IS 'Original            Principal           Amount' , 
+	ID IS 'Deal                Id' ) ; 
+  
+LABEL ON COLUMN DWH.GCPPDLLETT 
+( DLNO TEXT IS 'Deal Number' , 
+	BRCA TEXT IS 'Branch Code-Alpha' , 
+	BSAACID TEXT IS 'CBR Account' , 
+	LLETT TEXT IS 'Letter of credit' , 
+	CNNA TEXT IS 'Confirmation Narrative' , 
+	VDAT TEXT IS 'Value date' , 
+	AMNT TEXT IS 'Original principal amount' , 
+	ID TEXT IS 'Deal Id' ) ; 
+  
+CREATE VIEW DWH.KRSFIXCLIENTV ( 
+	CNUM , 
+	CNAME , 
+	CAT_NOM , 
+	KOFFRUR , 
+	KOFFVAL , 
+	DAT , 
+	DATTO ) 
+	AS 
+	( 
+	SELECT XSD.CNUM AS CNUM, '' AS CNAME, 'RUR' AS CAT_NOM, 0.5 AS KOFFRUR, 0.5 AS KOFFVAL, XSD.DAT AS DAT, XSD.DATTO AS DATTO 
+	 FROM DWH.XSDCUSTPD XSD 
+	 WHERE XSD.ISSTRAT = 'Y' 
+	 AND XSD.ISNATUR = 'Y' 
+	UNION 
+	SELECT XSD.CNUM AS CNUM, '' AS CNAME, 'NONRUR' AS CAT_NOM, 1 AS KOFFRUR, 0.5 AS KOFFVAL, XSD.DAT AS DAT, XSD.DATTO AS DATTO 
+	 FROM DWH.XSDCUSTPD XSD 
+	 WHERE XSD.ISSTRAT = 'Y' 
+	 AND XSD.ISNATUR = 'Y' 
+	UNION 
+	SELECT F135.CNUM AS CNUM, F135.NAME AS CNAME, 'RUR' AS CAT_NOM, 0 AS KOFFRUR, 0 AS KOFFVAL, F135.DAT AS DAT, F135.DATTO AS DATTO 
+	 FROM DWH.F135C00001 F135 
+	 WHERE F135.CODE_RASSH = '8976' 
+	UNION 
+	SELECT F135.CNUM AS CNUM, F135.NAME AS CNAME, 'NONRUR' AS CAT_NOM, 1 AS KOFFRUR, 0 AS KOFFVAL, F135.DAT AS DAT, F135.DATTO AS DATTO 
+	 FROM DWH.F135C00001 F135 
+	 WHERE F135.CODE_RASSH = '8976' 
+	UNION 
+	SELECT F135.CNUM AS CNUM, F135.NAME AS CNAME, 'RUR' AS CAT_NOM, 0.2 AS KOFFRUR, 0.2 AS KOFFVAL, F135.DAT AS DAT, F135.DATTO AS DATTO 
+	 FROM DWH.F135C00001 F135 
+	 WHERE F135.CODE_RASSH = '8977' 
+	UNION 
+	SELECT F135.CNUM AS CNUM, F135.NAME AS CNAME, 'NONRUR' AS CAT_NOM, 1 AS KOFFRUR, 0.2 AS KOFFVAL, F135.DAT AS DAT, F135.DATTO AS DATTO 
+	 FROM DWH.F135C00001 F135 
+	 WHERE F135.CODE_RASSH = '8977' 
+	) ; 
+  
+LABEL ON TABLE DWH.KRSFIXCLIENTV 
+	IS 'KRS client details data' ; 
+  
+LABEL ON COLUMN DWH.KRSFIXCLIENTV 
+( CNUM IS 'client number' , 
+	CNAME IS 'client name' , 
+	CAT_NOM IS 'nomination category' , 
+	KOFFRUR IS 'RUR koefficient' , 
+	KOFFVAL IS 'NONRUR koefficient' , 
+	DAT IS 'begin date' , 
+	DATTO IS 'end date' ) ; 
+  
+LABEL ON COLUMN DWH.KRSFIXCLIENTV 
+( CNUM TEXT IS 'номер клиента' , 
+	CNAME TEXT IS 'наименование клиента' , 
+	CAT_NOM TEXT IS 'категория номинирования' , 
+	KOFFRUR TEXT IS 'коэффициент взвешивания суммы, фондированной в руб' , 
+	KOFFVAL TEXT IS 'коэффициент взвешивания суммы, фондированной в вал' , 
+	DAT TEXT IS 'дата начала действия записи' , 
+	DATTO TEXT IS 'дата конца действия записи' ) ; 
+  
+CREATE VIEW DWH.N1RR_ACC_VW ( 
+	ISSUEID , 
+	DAT , 
+	BSAACID , 
+	ACID , 
+	OPID , 
+	OPNMR , 
+	AMOUNT_ACC_CUR FOR COLUMN AMOUN00001 , 
+	AMOUNT_ACC_RUB FOR COLUMN AMOUN00002 ) 
+	AS 
+	SELECT  
+		N1RR.ISSUEID ,  
+		N1RR.DAT ,  
+		ACC.BSAACID ,  
+		ACC.ACID ,  
+		ACC.OPID ,  
+		SCOP.OPNMR ,  
+		VALUE(BALT.OBAC + BALT.DTAC + BALT.CTAC, 0) AS AMOUNT_ACC_CUR ,  
+		VALUE(BALT.OBBC + BALT.DTBC + BALT.CTBC, 0) AS AMOUNT_ACC_RUB  
+	FROM DWH.N1RR_00005 N1RR  
+	LEFT JOIN DWH.N1RR_00001 ACC ON ( N1RR.ISSUEID , N1RR.DAT ) = ( ACC.ISSUEID , ACC.DAT )  
+	LEFT JOIN DWH.BALTUR BALT ON ( ACC.BSAACID , ACC.ACID ) = ( BALT.BSAACID , BALT.ACID )  
+		AND ACC.DAT BETWEEN BALT.DAT AND BALT.DATTO  
+	LEFT JOIN DWH.SCOPS SCOP ON ACC.OPID = SCOP.OPID ; 
+  
+COMMENT ON COLUMN DWH.N1RR_ACC_VW 
+( ISSUEID IS 'ID выпуска ценной бумаги' , 
+	DAT IS 'Дата (за)' , 
+	BSAACID IS 'Номер лицевого счета ЦБ РФ' , 
+	ACID IS 'Номер лицевого счета MIDAS' , 
+	OPID IS 'ID вида операции с ценной бумагой' , 
+	OPNMR IS 'Тип счета' , 
+	AMOUNT_ACC_CUR IS 'Остаток по счету в валюте счета' , 
+	AMOUNT_ACC_RUB IS 'Остаток по счету в руб. экв.' ) ; 
+  
+LABEL ON COLUMN DWH.N1RR_ACC_VW 
+( OPNMR TEXT IS 'Operation Name RUS' ) ; 
+  
+CREATE VIEW DWH.N1RR_ISSUE_VW ( 
+	ISSUEID , 
+	DAT , 
+	SECID , 
+	PORTFOLIO_TYPE_ID FOR COLUMN PORTF00001 , 
+	GROUP_ACC_OPID FOR COLUMN GROUP00001 , 
+	SEC_QUANTITY FOR COLUMN SEC_Q00001 , 
+	SEC_QUANTITY_REPO FOR COLUMN SEC_Q00002 , 
+	AMOUNT_ISSUE FOR COLUMN AMOUN00001 , 
+	AMOUNT_EXC_ISSUE FOR COLUMN AMOUN00002 , 
+	IS_INCL_IN_RR FOR COLUMN IS_IN00001 , 
+	BSAACID , 
+	ACID , 
+	OPID , 
+	COR ) 
+	AS 
+	SELECT 
+		ISSUEID ,  
+		DAT , 
+		SECID , 
+		PORTFOLIO_TYPE_ID , 
+		GROUP_ACC_OPID , 
+		SEC_QUANTITY , 
+		SEC_QUANTITY_REPO , 
+		AMOUNT_ISSUE , 
+		AMOUNT_EXC_ISSUE , 
+		IS_INCL_IN_RR , 
+		BSAACID , 
+		ACID , 
+		OPID , 
+		COR 
+	FROM ( 
+		SELECT  
+			N1RR.ISSUEID , 
+			N1RR.DAT , 
+			IDNT.SECID , 
+			IDNT.PORTFOLIO_TYPE_ID , 
+			IDNT.GROUP_ACC_OPID ,  
+			N1RR.SEC_QUANTITY , 
+			VALUE( COR_.SEC_QUANTITY_REPO , N1RR.SEC_QUANTITY_REPO ) AS SEC_QUANTITY_REPO, 
+			VALUE( BALT.AMOUNT_ISSUE , 0 ) AS AMOUNT_ISSUE, 
+			CASE WHEN COR_.ISSUEID IS NOT NULL THEN COR_.AMOUNT_EXC_ISSUE 
+				 WHEN N1RR.SEC_QUANTITY <> 0 THEN BALT.AMOUNT_ISSUE * N1RR.SEC_QUANTITY_REPO/N1RR.SEC_QUANTITY 
+				 ELSE 0 
+			END AS AMOUNT_EXC_ISSUE , 
+			VALUE(INCL.IS_INCL_IN_RR, 'Y') AS IS_INCL_IN_RR, 
+			BALT.BSAACID , 
+			BALT.ACID , 
+			BALT.OPID , 
+			CASE WHEN COR_.ISSUEID IS NOT NULL THEN 1 ELSE 0 END AS COR 
+		FROM DWH.N1RR_ISSUE N1RR  
+		JOIN DWH.N1RR_00003 IDNT ON N1RR.ISSUEID = IDNT.ISSUEID 
+		LEFT JOIN  
+			(SELECT  
+				A.ISSUEID , 
+				A.DAT , 
+				A.BSAACID , 
+				B.ACID , 
+				MIN ( B.OPID ) AS OPID ,  
+				A.AMOUNT_ISSUE 
+			FROM  
+				(SELECT  
+					ACC.ISSUEID , 
+					ACC.DAT , 
+					MAX ( CASE WHEN ACC.OPID IN ( 1 , 16 ) THEN VALUE( ACC.BSAACID , '' ) ELSE '' END ) AS BSAACID , 
+					SUM (BAL.OBBC + BAL.DTBC + BAL.CTBC ) AS AMOUNT_ISSUE 
+				FROM DWH.N1RR_00001 ACC  
+				LEFT JOIN DWH.BALTUR BAL ON ( ACC.BSAACID , ACC.ACID ) = ( BAL.BSAACID , BAL.ACID )  
+					AND ACC.DAT BETWEEN BAL.DAT AND BAL.DATTO 
+				GROUP BY ISSUEID, ACC.DAT 
+				) A 
+			JOIN DWH.N1RR_00001 B ON ( A.BSAACID , A.ISSUEID , A.DAT ) = ( B.BSAACID , B.ISSUEID , B.DAT ) 
+			GROUP BY A.ISSUEID , A.DAT , A.BSAACID , B.ACID , A.AMOUNT_ISSUE 
+		) BALT ON ( N1RR.ISSUEID , N1RR.DAT ) = ( BALT.ISSUEID , BALT.DAT )  
+		LEFT JOIN DWH.N1RR_00004 INCL ON ( N1RR.ISSUEID , N1RR.DAT ) = ( INCL.ISSUEID , INCL.DAT )  
+		LEFT JOIN DWH.N1RR_00002 COR_ ON ( N1RR.ISSUEID , N1RR.DAT ) = ( COR_.ISSUEID , COR_.DAT )  
+	) S 
+	WHERE SEC_QUANTITY <> 0 OR SEC_QUANTITY_REPO <> 0 OR AMOUNT_ISSUE <> 0 OR AMOUNT_EXC_ISSUE <> 0 ; 
+  
+CREATE VIEW DWH.P6ACC_FULL ( 
+	ACC2 , 
+	ACOD ) 
+	AS 
+	WITH C AS (  
+	 SELECT * FROM DWH.P6LACOD72  
+	 UNION ALL 
+	 SELECT ID, ACCB AS ACC2, CAST(NULL AS CHAR(4)) AS ACOD 
+	 FROM DWH.APP72 A  
+	 WHERE NOT EXISTS (SELECT 1 FROM DWH.P6LACOD72 B WHERE A.ACCB = B.ACC2 ) 
+	) 
+	, ACODLST AS ( 
+	 SELECT LTYPE, TRIM(T.TOKEN) AS ACOD 
+	 FROM DWH.GCPLACOD F 
+	, TABLE( DWH.TOKENIZER ( ACODLST, ',')) T 
+	) 
+	SELECT DISTINCT C.ACC2, C.ACOD 
+	FROM C C  -- LOAN/DEAL 
+	INNER JOIN DWH.APP71 C71 ON C.ID = C71.ID  
+	UNION DISTINCT 
+	SELECT ACSC AS ACC2, CAST(NULL AS CHAR(4)) AS ACOD 
+	FROM DWH.GCPACCL2 
+	UNION DISTINCT 
+	SELECT ACC2, CAST(GLACOD AS CHAR(4)) AS ACOD 
+	FROM DWH.GCPTF71  -- LOSP 
+	/* Перенесены в таблицу DWH.P6ACCSRC 
+	UNION DISTINCT 
+	SELECT ACC2, cast(null as char(4)) as ACOD 
+	FROM DWH.BSS  -- DESP 
+	WHERE ACC2 IN ('42301','42601','42308','42608')  
+	*/ 
+	UNION DISTINCT 
+	SELECT CAST(NULL AS CHAR(5)) AS ACC2, ACOD 
+	FROM ACODLST WHERE LTYPE='K'  -- FCLT 
+	UNION DISTINCT 
+	SELECT CAST('OVRD' AS CHAR(5)) AS ACC2, ACOD 
+	FROM ACODLST WHERE LTYPE='O'  -- OVRD 
+	/* Перенесены в таблицу DWH.P6ACCSRC 
+	UNION DISTINCT 
+	SELECT ACC2, '0000' as ACOD 
+	FROM DWH.BSS  -- LMTS_1 
+	WHERE ACC2 IN ('91316', '91317') 
+	UNION DISTINCT 
+	SELECT ACC2, '6568' as ACOD 
+	FROM DWH.BSS  -- LMTS_2 
+	WHERE ACC2 = '91317' 
+	UNION DISTINCT 
+	SELECT ACC2, '6569' as ACOD 
+	FROM DWH.BSS  -- LMTS_2 
+	WHERE ACC2 = '91317' 
+	UNION DISTINCT 
+	SELECT ACC2, '6575' as ACOD 
+	FROM DWH.BSS  -- LMTS_2 
+	WHERE ACC2 = '91317' 
+	*/ 
+	UNION DISTINCT 
+	SELECT ACC2, ACOD 
+	FROM DWH.P6ACCSRC ; 
+  
+LABEL ON TABLE DWH.P6ACC_FULL 
+	IS 'ACC2+ACOD for F71/F72' ; 
+  
+CREATE VIEW DWH.PDKVO2 ( 
+	CCDID , 
+	ID , 
+	POD , 
+	BSAACID , 
+	ACID , 
+	KVO , 
+	AMNT , 
+	CBCCY , 
+	PBR , 
+	PREF , 
+	PDOCNUM , 
+	AMOUNTYPE , 
+	INPUTBY , 
+	ATYP , 
+	BNAME , 
+	BCCODE , 
+	SWIFT , 
+	DLPSNUM , 
+	PAYFOR , 
+	DIRECT , 
+	PDIRECT , 
+	PSBRANCH , 
+	CCDAUTUSER , 
+	PNARRATIVE ) 
+	AS 
+	SELECT A.CCDID, A.ID, A.POD, A.BSAACID, A.ACID, A.KVO, A.AMNT, A.CBCCY, PD.PBR, CASE WHEN A.PBR = 'BATCH' AND ( VALUE(PDEXT.PREF, '') = '' ) THEN A.PREF ELSE PDEXT.PREF END AS PREF, /* pdext.PREF, */ A.PDOCNUM, A.AMOUNTYPE, A.INPUTBY, A.ATYP, A.BNAME, A.BCCODE, A.SWIFT, A.DLPSNUM, A.PAYFOR, A.DIRECT, A.PDIRECT, PSBRANCH, CCDAUTUSER, PNARRATIVE FROM DWH.PDKVO00005 A JOIN DWH.PD PD ON PD.ID=A.ID LEFT JOIN DWH.PDEXT PDEXT ON PD.ID = PDEXT.ID ; 
+  
+LABEL ON COLUMN DWH.PDKVO2 
+( CCDID IS 'Идентификатор ВО в CCD' , 
+	ID IS 'Идентификатор полупроводки' , 
+	POD IS 'Дата проводки' , 
+	BSAACID IS 'Номер счета ЦБ' , 
+	ACID IS 'Номер счета Midas' , 
+	KVO IS 'Код КВО' , 
+	AMNT IS 'Сумма' , 
+	CBCCY IS 'Код валюты' , 
+	PBR IS 'Posting Group' , 
+	PDOCNUM IS 'Номер уведомления/расчетного документа' , 
+	AMOUNTYPE IS 'Код суммы операции' , 
+	INPUTBY IS 'Профайл пользователя, проводившего операцию' , 
+	ATYP IS 'Тип лицевого счета' , 
+	BNAME IS 'Наименование банка получателя/плательщика (контрагента)' , 
+	BCCODE IS 'Код страны банка получателя/плательщика' , 
+	SWIFT IS 'Код SWIFT/БИК' , 
+	DLPSNUM IS 'Паспорт сделки' , 
+	PAYFOR IS 'Признак платежа за товары (0)/услуги (1)' , 
+	DIRECT IS 'Признак платежа за (вывоз (0)/ввоз (1))' , 
+	PDIRECT IS 'Тип операции (списание (2)/зачисление (1))' , 
+	PSBRANCH IS 'Филиал паспорта (регистрационный номер филиала банка ПС)' , 
+	CCDAUTUSER IS 'Авторизатор (профайл пользователя, авторизатора ОВК)' , 
+	PNARRATIVE IS 'Назначение платежа' ) ; 
+  
+CREATE VIEW DWH.SDACODPD0 ( 
+	A5ACCD , 
+	A5ACCN ) 
+	AS 
+	( 
+	 SELECT A5ACCD, A5ACCN FROM (  
+	 SELECT A5ACCD, A5ACCN FROM DWH.SDACODPD  
+	 UNION DISTINCT  
+	 SELECT '0000' AS A5ACCD, 'IFLEX ACOD' AS A5ACCN  
+	 FROM DWH.WORKDAY  
+	 UNION DISTINCT  
+	 SELECT '****' AS A5ACCD, 'ACOD for COUNTRY_CODES' AS A5ACCN  
+	 FROM DWH.WORKDAY  
+	 ) A 
+	) ; 
+  
+CREATE VIEW DWH.V128_LNS1 ( 
+	POD , 
+	DEALID , 
+	DLNO , 
+	BSAACID , 
+	ACID , 
+	DTAC , 
+	RATE , 
+	TERMCD , 
+	TERM_NAME , 
+	LINESQ , 
+	CNUM , 
+	PRCD , 
+	ROLL , 
+	INCL , 
+	USER_COMMENT FOR COLUMN USER_00001 , 
+	EXCL_CODE , 
+	EXCL_DESCR ) 
+	AS 
+	SELECT L.POD, L.DEALID, D.DLNO, L.BSAACID, L.ACID, ABS(DTAC) AS DTAC, L.RATE, L.TERMCD,  
+			T.LINENM AS TERM_NAME, L.LINESQ, L.CNUM, L.PRCD, L.ISPROLONGFROMLOAN AS ROLL, 
+			L.INCL, VALUE(L.USER_COMMENT, '') AS USER_COMMENT,  
+			CASE WHEN L.EXCL_CODE IS NULL  
+				THEN ''  
+				ELSE TRIM(CHAR(L.EXCL_CODE))  
+			END AS EXCL_CODE, VALUE(E.EXCL_DESCR, '') AS EXCL_DESCR 
+	 FROM DWH.F128_LNS L 
+	 INNER JOIN DWH.DELOTAB D ON D.ID = L.DEALID 
+	 INNER JOIN DWH.GCP128 T ON T.TERMCD = L.TERMCD 
+	 LEFT JOIN DWH.F128_EXCL E ON E.EXCL_CODE = L.EXCL_CODE ; 
+  
+COMMENT ON COLUMN DWH.V128_LNS1 
+( ROLL IS 'Признак того, что сделка из модуля LOAN и была пролонгирована' ) ; 
+  
+LABEL ON TABLE DWH.V128_LNS1 
+	IS 'View F128_LNS with names' ; 
+  
+LABEL ON COLUMN DWH.V128_LNS1 
+( DLNO IS 'Deal                Number' , 
+	TERM_NAME IS 'Line Name' ) ; 
+  
+LABEL ON COLUMN DWH.V128_LNS1 
+( DLNO TEXT IS 'Deal Number' , 
+	TERM_NAME TEXT IS 'Line Name' ) ; 
+  
+CREATE VIEW DWH.V135REZCOR ( 
+	ACC2 , 
+	BSAACID , 
+	ACID , 
+	ACOD , 
+	DAT , 
+	DATTO , 
+	RBSAACID , 
+	RACID , 
+	RZBC , 
+	RATE , 
+	RISKGROUP , 
+	PORTF_ID , 
+	PORTFOLIO , 
+	COVER_VAL , 
+	COVER_CCY , 
+	REZ_TYPE , 
+	LST_ID , 
+	REZBC_DIFF ) 
+	AS 
+	SELECT LEFT(BSAACID, 5) AS ACC2, BSAACID, ACID, SUBSTR(ACID, 12, 4) AS ACOD  
+	, TRIM(CHAR(F.DAT, EUR)) AS DAT, TRIM(CHAR(F.DATTO, EUR)) AS DATTO 
+	, RBSAACID, RACID, RZBC, RATE, RISKGROUP 
+	, P.PORTF_ID, VALUE(P.PORTF_NAME, '') AS PORTFOLIO  
+	, COVER_VAL, COVER_CCY, REZ_TYPE 
+	, LST_ID, 0 AS REZBC_DIFF  -- рассчитывается отдельно ЗА дату (!) 
+	FROM DWH.F135REZCOR F  
+	LEFT JOIN DWH.F115PORTF P ON P.PORTF_ID = F.PORTF_ID ; 
+  
+CREATE VIEW DWH.V402 ( 
+	IDPAYMD , 
+	ID_DETAIL , 
+	KRUR , 
+	DAT_IMP , 
+	DAT_CORR , 
+	IOPR , 
+	ORIGINATING_BRANCH FOR COLUMN ORIGI00001 , 
+	BSACCID_NEREZ FOR COLUMN BSACC00001 , 
+	RCRTYP_NEREZ FOR COLUMN RCRTY00001 , 
+	SNRNAM_NEREZ FOR COLUMN SNRNA00001 , 
+	KSN_NEREZ , 
+	REZ_CUST_NEREZ FOR COLUMN REZ_C00001 , 
+	CODE_REZ , 
+	BSACCID_REZ FOR COLUMN BSACC00002 , 
+	SNRNAM_REZ , 
+	INN_REZ , 
+	RCRTYP_REZ , 
+	REZ_CUST_REZ FOR COLUMN REZ_C00002 , 
+	CBCCY_PLAT , 
+	KNP , 
+	SWIFT_NEREZ FOR COLUMN SWIFT00001 , 
+	KSN_BANK , 
+	IZM_AM , 
+	SYS_INF , 
+	PREF , 
+	REFUND_IND , 
+	KRUR_AMNT , 
+	BANK_NEREZ , 
+	DAT_ZAGR , 
+	PROSM , 
+	SYST_USER , 
+	NOTES , 
+	ID_DEL , 
+	RPT_PRD , 
+	CORR_DATE , 
+	ID_KLIKO , 
+	NARRATIVE , 
+	BANK_NEREZ2 FOR COLUMN BANK_00001 , 
+	T402AB , 
+	T402DP ) 
+	AS 
+	SELECT T.IDPAYMD, T.ID_DETAIL, T.KRUR, 
+	DAT_IMP, DAT_CORR, IOPR, ORIGINATING_BRANCH,  
+	BSACCID_NEREZ, 
+	RCRTYP_NEREZ, 
+	VALUE(R.SNRNAM_NEREZ, T.SNRNAM_NEREZ) AS SNRNAM_NEREZ, 
+	VALUE(R.KSN_NEREZ, T.KSN_NEREZ) AS KSN_NEREZ, 
+	REZ_CUST_NEREZ, 
+	CODE_REZ, 
+	BSACCID_REZ, 
+	VALUE(R.SNRNAM_REZ, T.SNRNAM_REZ) AS SNRNAM_REZ, 
+	OKPO_REZ AS INN_REZ, 
+	RCRTYP_REZ, 
+	REZ_CUST_REZ, 
+	VALUE(R.CBCCY_PLAT, T.CBCCY_PLAT) AS CBCCY_PLAT, 
+	VALUE(R.KNP, T.KNP) AS KNP, 
+	VALUE(R.SWIFT_NEREZ, T.SWIFT_NEREZ) AS SWIFT_NEREZ, 
+	KSN_BANK, 
+	IZM_AM, 
+	SYS_INF, 
+	PREF, 
+	REFUND_IND, 
+	VALUE(R.KRUR_AMNT, T.KRUR_AMNT) AS KRUR_AMNT, 
+	VALUE(R.BANK_NEREZ, T.BANK_NEREZ) AS BANK_NEREZ, 
+	DAT_ZAGR, 
+	PROSM, 
+	SYST_USER,  
+	NOTES, 
+	ID_DEL, 
+	RPT_PRD, 
+	CORR_DATE, 
+	ID_KLIKO, 
+	VALUE(R.NARRATIVE, T.NARRATIVE) AS NARRATIVE, 
+	VALUE(R.BANK_NEREZ2, T.BANK_NEREZ2) AS BANK_NEREZ2, 
+	T.T402AB, 
+	T.T402DP 
+	FROM DWH.F402 T 
+	LEFT JOIN DWH.F402CORR R 
+	ON R.IDPAYMD=T.IDPAYMD AND R.ID_DETAIL=T.ID_DETAIL AND R.KRUR=T.KRUR ; 
+  
+LABEL ON TABLE DWH.V402 
+	IS 'Vitrina F402 + F402CORR' ; 
+  
+CREATE VIEW DWH.V402_IOCOR ( 
+	NAME_USR , 
+	KOD , 
+	NAME_RUS , 
+	DAT , 
+	DATTO ) 
+	AS 
+	SELECT A.NAME_USR, A.KOD, VALUE(B.NAME_RUS, '') AS NAME_RUS,  
+	CURRENT DATE AS DAT, CURRENT DATE AS DATTO  -- для совместимости со стандартным интерфейсом 
+	FROM DWH.F402_IOCOR A LEFT JOIN DWH.F402_00005 B ON INT(B.KOD)=INT(A.KOD) ; 
+  
+LABEL ON TABLE DWH.V402_IOCOR 
+	IS 'View F402_IOCOR with names from F402_INTORG2' ; 
+  
+LABEL ON COLUMN DWH.V402_IOCOR 
+( NAME_USR IS 'Name for correction' ) ; 
+  
+CREATE VIEW DWH.V701_RATES ( 
+	TERM_ID , 
+	TERM_NAME , 
+	CBCCY , 
+	CCY_NAME , 
+	RTYP , 
+	RATE , 
+	DAT , 
+	DATTO ) 
+	AS 
+	SELECT R.TERM_ID, TERM_NAME, R.CBCCY,  
+			R.CBCCY CONCAT '-' CONCAT C.GLCCY AS CCY_NAME,  
+			R.RTYP, R.RATE, R.DAT, R.DATTO  
+			FROM DWH.F701_RATES R  
+			INNER JOIN DWH.F701_TERMS T ON T.TERM_ID=R.TERM_ID  
+			INNER JOIN DWH.CURRENCY C ON C.CBCCY=R.CBCCY ; 
+  
+LABEL ON TABLE DWH.V701_RATES 
+	IS 'View F701_RATES with names' ; 
+  
+LABEL ON COLUMN DWH.V701_RATES 
+( TERM_NAME IS 'Term name' ) ; 
+  
+LABEL ON COLUMN DWH.V701_RATES 
+( TERM_ID TEXT IS 'ID of Term' , 
+	CBCCY TEXT IS 'Currency code' , 
+	RTYP TEXT IS 'Type of Rate' , 
+	RATE TEXT IS 'Rate value' , 
+	DAT TEXT IS 'Date From' , 
+	DATTO TEXT IS 'Date To' ) ; 
+  
+CREATE VIEW DWH.V701RPTLOG ( 
+	RUN_ID , 
+	DAT , 
+	BRCA , 
+	USER_NAME , 
+	STARTTIME , 
+	ENDTIME , 
+	STATUS , 
+	MSG , 
+	LAST_UPDATED FOR COLUMN LAST_00001 ) 
+	AS 
+	SELECT RUN_ID, DAT, BRCA, USER_NAME 
+	, SUBSTR(CHAR(STARTTIME), 1, 19) AS STARTTIME 
+	, SUBSTR(CHAR(ENDTIME), 1, 19) AS ENDTIME 
+	, STATUS 
+	, CAST(REPLACE(REPLACE(REPLACE(REPLACE(MSG 
+	, 'NO_FLEX', 'ПРЕДУПРЕЖДЕНИЕ (WARNING): Данные из FCCHS по проводкам FLEX еще не загружены в систему!') 
+	, 'NO_SWAP', 'ПРЕДУПРЕЖДЕНИЕ (WARNING): Данные из RSS по сделкам SWAP еще не загружены в систему!') 
+	, 'NO_REPO', 'ПРЕДУПРЕЖДЕНИЕ (WARNING): Данные из МЦБ по сделкам РЕПО еще не загружены в систему!') 
+	, 'SWAP_BAD', 'ПРЕДУПРЕЖДЕНИЕ (WARNING): Данные из RSS по сделкам SWAP загружены с ошибками!') 
+	 AS VARCHAR(4096)) AS MSG 
+	, SUBSTR(CHAR(LAST_UPDATED), 1, 19) AS LAST_UPDATED 
+	FROM DWH.F701RPTLOG ; 
+  
+LABEL ON TABLE DWH.V701RPTLOG 
+	IS 'F701RPTLOG for framework' ; 
+  
+CREATE VIEW DWH.V808D1_T ( 
+	DAT_NEW , 
+	DAT_OLD , 
+	BSAACID , 
+	ACID , 
+	INVOICE_ID , 
+	INVCCY , 
+	RBSAACID , 
+	RACID , 
+	"SOURCE" , 
+	PAIR_TYPE , 
+	REZBC_NEW , 
+	REZBC_OLD , 
+	AMNTAC_NEW , 
+	AMNTAC_OLD , 
+	AMNTBC_NEW , 
+	AMNTBC_OLD , 
+	RATE_NEW , 
+	RATE_OLD , 
+	COVER_NEW , 
+	COVER_OLD , 
+	RISKGROUP_NEW FOR COLUMN RISKG00001 , 
+	RISKGROUP_OLD FOR COLUMN RISKG00002 , 
+	CURRATE_NEW FOR COLUMN CURRA00001 , 
+	CURRATE_OLD FOR COLUMN CURRA00002 , 
+	TRN_NEG , 
+	TRN_POS , 
+	D1 , 
+	D1_1 , 
+	D2 , 
+	D3 , 
+	D3_1 , 
+	D4 , 
+	D4_1 , 
+	D5 , 
+	D5_1 , 
+	D6 , 
+	D6_1 , 
+	D7 , 
+	D7_1 , 
+	D8 , 
+	D9 , 
+	D10 , 
+	D11 , 
+	D12 , 
+	D13 , 
+	D14 , 
+	D15 ) 
+	AS 
+	SELECT DAT_NEW, DAT_OLD,  
+	BSAACID, ACID,  
+	INVOICE_ID, INVCCY, 
+	RBSAACID, RACID,  
+	TRIM(SOURCE) AS SOURCE, 
+	CASE PAIR_TYPE 
+	WHEN '1.1' THEN INT(1) 
+	WHEN '1.2' THEN INT(4) 
+	WHEN '1.3.1' THEN INT(5) 
+	WHEN '1.3.2' THEN INT(6) 
+	WHEN '2' THEN INT(2) 
+	WHEN '3.1' THEN INT(3) 
+	WHEN '3.2' THEN INT(7) 
+	WHEN '3.3.1' THEN INT(8) 
+	WHEN '3.3.2' THEN INT(9) 
+	ELSE INT(0) END AS PAIR_TYPE, 
+	REZBC_NEW, REZBC_OLD, AMNTAC_NEW, AMNTAC_OLD, AMNTBC_NEW, AMNTBC_OLD, 
+	RATE_NEW, RATE_OLD, COVER_NEW, COVER_OLD, RISKGROUP_NEW, RISKGROUP_OLD, 
+	CURRATE_NEW, CURRATE_OLD, TRN_NEG, TRN_POS, 
+	D1, D1_1, D2, D3, D3_1, D4, D4_1, D5, D5_1, D6, D6_1, D7, D7_1,  
+	D8, D9, D10, D11, D12, D13, D14, D15 
+	FROM DWH.F808D1_T ; 
+  
+LABEL ON TABLE DWH.V808D1_T 
+	IS 'Vitrina F808D1_T for EXCEL' ; 
+  
+CREATE VIEW DWH.V808D1_T_X ( 
+	DAT_NEW , 
+	DAT_OLD , 
+	BSAACID , 
+	ACID , 
+	RBSAACID , 
+	RACID , 
+	"SOURCE" , 
+	PAIR_TYPE , 
+	REZBC_NEW , 
+	REZBC_OLD , 
+	AMNTAC_NEW , 
+	AMNTAC_OLD , 
+	AMNTBC_NEW , 
+	AMNTBC_OLD , 
+	RATE_NEW , 
+	RATE_OLD , 
+	COVER_NEW , 
+	COVER_OLD , 
+	RISKGROUP_NEW FOR COLUMN RISKG00001 , 
+	RISKGROUP_OLD FOR COLUMN RISKG00002 , 
+	CURRATE_NEW FOR COLUMN CURRA00001 , 
+	CURRATE_OLD FOR COLUMN CURRA00002 , 
+	TRN_NEG , 
+	TRN_POS , 
+	D1 , 
+	D1_1 , 
+	D2 , 
+	D3 , 
+	D3_1 , 
+	D4 , 
+	D4_1 , 
+	D5 , 
+	D5_1 , 
+	D6 , 
+	D6_1 , 
+	D7 , 
+	D7_1 , 
+	D8 , 
+	D9 , 
+	D10 , 
+	D11 , 
+	D12 , 
+	D13 , 
+	D14 , 
+	D15 ) 
+	AS 
+	SELECT DAT_NEW, DAT_OLD, BSAACID, ACID, RBSAACID, RACID,  
+		TRIM(SOURCE) AS SOURCE,  
+		CASE PAIR_TYPE  
+		WHEN '1.1' THEN INT(1)  
+		WHEN '1.2' THEN INT(4)  
+		WHEN '1.3.1' THEN INT(5)  
+		WHEN '1.3.2' THEN INT(6)  
+		WHEN '2' THEN INT(2)  
+		WHEN '3.1' THEN INT(3)  
+		WHEN '3.2' THEN INT(7)  
+		WHEN '3.3.1' THEN INT(8)  
+		WHEN '3.3.2' THEN INT(9)  
+		ELSE INT(0) END AS PAIR_TYPE,  
+		REZBC_NEW, REZBC_OLD, AMNTAC_NEW, AMNTAC_OLD, AMNTBC_NEW, AMNTBC_OLD,  
+		RATE_NEW, RATE_OLD, COVER_NEW, COVER_OLD, RISKGROUP_NEW, RISKGROUP_OLD,  
+		CURRATE_NEW, CURRATE_OLD, TRN_NEG, TRN_POS,  
+		D1, D1_1, D2, D3, D3_1, D4, D4_1, D5, D5_1, D6, D6_1, D7, D7_1,  
+		D8, D9, D10, D11, D12, D13, D14, D15  
+		FROM DWH.F808D1_T_X ; 
+  
+LABEL ON TABLE DWH.V808D1_T_X 
+	IS 'Vitrina F808D1_T_X for EXCEL' ; 
+  
+CREATE VIEW DWH.V808D1_T_Y ( 
+	DAT_NEW , 
+	DAT_OLD , 
+	BSAACID , 
+	ACID , 
+	RBSAACID , 
+	RACID , 
+	"SOURCE" , 
+	PAIR_TYPE , 
+	REZBC_NEW , 
+	REZBC_OLD , 
+	AMNTAC_NEW , 
+	AMNTAC_OLD , 
+	AMNTBC_NEW , 
+	AMNTBC_OLD , 
+	RATE_NEW , 
+	RATE_OLD , 
+	COVER_NEW , 
+	COVER_OLD , 
+	RISKGROUP_NEW FOR COLUMN RISKG00001 , 
+	RISKGROUP_OLD FOR COLUMN RISKG00002 , 
+	CURRATE_NEW FOR COLUMN CURRA00001 , 
+	CURRATE_OLD FOR COLUMN CURRA00002 , 
+	TRN_NEG , 
+	TRN_POS , 
+	D1 , 
+	D1_1 , 
+	D2 , 
+	D3 , 
+	D3_1 , 
+	D4 , 
+	D4_1 , 
+	D5 , 
+	D5_1 , 
+	D6 , 
+	D6_1 , 
+	D7 , 
+	D7_1 , 
+	D8 , 
+	D9 , 
+	D10 , 
+	D11 , 
+	D12 , 
+	D13 , 
+	D14 , 
+	D15 ) 
+	AS 
+	SELECT DAT_NEW, DAT_OLD, BSAACID, ACID, RBSAACID, RACID,  
+		TRIM(SOURCE) AS SOURCE,  
+		CASE PAIR_TYPE  
+		WHEN '1.1' THEN INT(1)  
+		WHEN '1.2' THEN INT(4)  
+		WHEN '1.3.1' THEN INT(5)  
+		WHEN '1.3.2' THEN INT(6)  
+		WHEN '2' THEN INT(2)  
+		WHEN '3.1' THEN INT(3)  
+		WHEN '3.2' THEN INT(7)  
+		WHEN '3.3.1' THEN INT(8)  
+		WHEN '3.3.2' THEN INT(9)  
+		ELSE INT(0) END AS PAIR_TYPE,  
+		REZBC_NEW, REZBC_OLD, AMNTAC_NEW, AMNTAC_OLD, AMNTBC_NEW, AMNTBC_OLD,  
+		RATE_NEW, RATE_OLD, COVER_NEW, COVER_OLD, RISKGROUP_NEW, RISKGROUP_OLD,  
+		CURRATE_NEW, CURRATE_OLD, TRN_NEG, TRN_POS,  
+		D1, D1_1, D2, D3, D3_1, D4, D4_1, D5, D5_1, D6, D6_1, D7, D7_1,  
+		D8, D9, D10, D11, D12, D13, D14, D15  
+		FROM DWH.F808D1_T_Y ; 
+  
+LABEL ON TABLE DWH.V808D1_T_Y 
+	IS 'Vitrina F808D1_T_Y for EXCEL' ; 
+  
+CREATE VIEW DWH.VACCRATLST ( 
+	ACC2 , 
+	GRPID , 
+	GRPNAM , 
+	PSAV , 
+	ACC1NAM , 
+	ACC2NAM ) 
+	AS 
+	SELECT L.ACC2, L.GRPID, G.GRPNAM, G.GRPPART AS PSAV, B.ACC1NAM, B.ACC2NAM 
+	FROM DWH.ACCRATLST L  
+	INNER JOIN DWH.ACCRATGRP G ON G.GRPID = L.GRPID  
+	INNER JOIN DWH.BSS B ON B.ACC2 = L.ACC2 ; 
+  
+LABEL ON TABLE DWH.VACCRATLST 
+	IS 'View ACCRATLST with GrpNam, BssNam' ; 
+  
+LABEL ON COLUMN DWH.VACCRATLST 
+( ACC2 IS 'Account' , 
+	GRPID IS 'Account group' , 
+	GRPNAM IS 'Name of accounts group' ) ; 
+  
+CREATE VIEW DWH.VCURRENCY ( 
+	GLCCY , 
+	CBCCY , 
+	CYNMEN , 
+	CYNMF , 
+	CYNM ) 
+	AS 
+	SELECT  
+		GLCCY,CBCCY,CYNMEN,CYNMF,CYNM  
+		FROM DWH.CURRENCY ; 
+  
+CREATE VIEW DWH.VF634OVP ( 
+	"DATE" , 
+	BR_CODE , 
+	CCY_CODE , 
+	BALANCEPOS , 
+	SPOTPOS , 
+	TIMEPOS , 
+	GUARANTYPOS FOR COLUMN GUARA00001 , 
+	REZERV ) 
+	AS 
+	SELECT A.DATE, A.BR_CODE, A.CCY_CODE, SUM(A.BALANCEPOS) AS BALANCEPOS, SUM(A.SPOTPOS) AS SPOTPOS, SUM(A.TIMEPOS) AS TIMEPOS, SUM(A.GUARANTYPOS) AS GUARANTYPOS, SUM(A.REZERV) AS REZERV  
+		FROM  
+		(  
+		SELECT  
+		 DAT AS DATE,  
+		 BR_CODE AS BR_CODE,  
+		 CCY AS CCY_CODE,  
+		 CASE COL WHEN '3' THEN VALUE ELSE 0 END AS BALANCEPOS,  
+		 CASE COL WHEN '4' THEN VALUE ELSE 0 END AS SPOTPOS,  
+		 CASE COL WHEN '5' THEN VALUE ELSE 0 END AS TIMEPOS,  --срочная позиция 
+		 CASE COL WHEN '7' THEN VALUE ELSE 0 END AS GUARANTYPOS,  
+		 0 AS REZERV  
+		  
+		FROM DWH.F634DATA  
+		  
+		WHERE  
+		 LINE=1  
+		 AND COL IN (3,4,5,7)  
+		  
+		UNION ALL  
+		  
+		SELECT  
+		 POS.DAT AS DATE,  
+		 POS.CCODE AS BR_CODE,  --BranchCode 
+		 POS.CBCCY AS CCY_CODE,  --CCY code 
+		 0 AS BALANCEPOS,  
+		 0 AS SPOTPOS,  
+		 0 AS TIMEPOS,  
+		 0 AS GUARANTYPOS,  
+		 SUM (ROUND ( DECIMAL (CBAC, 19 )/( 1000 * 10 ** CUR.NBDP) , 6 )) AS REZERV  
+		  
+		FROM DWH.F634POSDET POS, DWH.CURRENCY CUR  
+		WHERE  
+		 PTYP IN ('R')  --Фактически сформированные резервы 
+		 AND POS.CBCCY=CUR.CBCCY  
+		  
+		GROUP BY POS.DAT, POS.CCODE, POS.CBCCY, POS.PTYP  
+		) A  
+		GROUP BY A.DATE, A.BR_CODE, A.CCY_CODE ; 
+  
+CREATE VIEW DWH.VPD1 ( 
+	ID , 
+	POD , 
+	ACID , 
+	BSAACID , 
+	CCY , 
+	AMNT , 
+	AMNTBC , 
+	PBR , 
+	PDRF , 
+	CPDRF , 
+	INVISIBLE , 
+	STATUS , 
+	PCID , 
+	UPDATED , 
+	"USERID" , 
+	OPERATION ) 
+	AS 
+	(SELECT ID, POD, ACID, BSAACID, CCY, AMNT, AMNTBC,  
+		PBR, PDRF, CPDRF, INVISIBLE, STATUS, PCID,  
+		TIMESTAMP('2029-01-01-23.59.59.000000'), USER, ''  
+		FROM DWH.PD  
+		UNION ALL  
+		SELECT IDOLD, POD, ACID, BSAACID, CCY, AMNT, AMNTBC,  
+		PBR, PDRF, CPDRF, INVISIBLE, STATUS, PCID,  
+		UPDATED, USERID, OPERATION  
+		FROM DWH.HPD) ; 
+  
+LABEL ON TABLE DWH.VPD1 
+	IS 'View of PD With History' ; 
+  
+LABEL ON COLUMN DWH.VPD1 
+( ID IS 'Posting ID' , 
+	POD IS 'Posting Date' , 
+	ACID IS 'GL Account ID' , 
+	BSAACID IS 'BSA Account ID' , 
+	CCY IS 'GL Currency Code' , 
+	AMNT IS 'Posting Amount' , 
+	AMNTBC IS 'Posting Amount      [Base CCY]' , 
+	PBR IS 'Posting Group' , 
+	PDRF IS 'Posting refference' , 
+	CPDRF IS 'Correction Posting  Refference' , 
+	INVISIBLE IS 'Visible/Invisible' , 
+	STATUS IS 'Posting Status' ) ; 
+  
+LABEL ON COLUMN DWH.VPD1 
+( ID TEXT IS 'ID Reference' , 
+	POD TEXT IS 'Posting Date' , 
+	ACID TEXT IS 'Midas Account' , 
+	BSAACID TEXT IS 'CB Account' , 
+	CCY TEXT IS 'Currency' , 
+	AMNT TEXT IS 'Account currency amount' , 
+	AMNTBC TEXT IS 'Base currentcy amount' , 
+	PBR TEXT IS 'Posting Group' , 
+	PDRF TEXT IS 'Posting refference' , 
+	CPDRF TEXT IS 'Correction Posting  Refference' , 
+	INVISIBLE TEXT IS 'Visible/Invisible = 1' , 
+	STATUS TEXT IS 'Posting Status' , 
+	PCID TEXT IS 'Posting ID' ) ; 
+  
+CREATE VIEW DWH.VSC_PLAN ( 
+	ST_NAME , 
+	PLAN_RECID , 
+	ACOD , 
+	OPKID , 
+	STID , 
+	OPKNMR ) 
+	AS 
+	( 
+	SELECT TRIM(B.STNM) CONCAT TRIM(B.STRNM) AS ST_NAME,  
+	A.*, C.OPKNMR 
+	FROM DWH.SC_PLAN A 
+	INNER JOIN DWH.SC B ON B.STID = A.STID 
+	INNER JOIN DWH.SCKOPS C ON C.OPKID = A.OPKID 
+	UNION ALL 
+	SELECT TRIM(B.STNM) CONCAT TRIM(B.STRNM) AS ST_NAME,  
+	A.*, C.OPKNMR 
+	FROM ( 
+	 SELECT A.PLAN_RECID, CAST(NULL AS CHAR(4)) AS ACOD, B.OPKID 
+	 , A.STID 
+	 FROM (  
+	 SELECT DISTINCT PLAN_RECID, STID FROM DWH.SC_PLAN  
+	 ) A, DWH.SCKOPS B 
+	 WHERE NOT EXISTS (SELECT 1 FROM DWH.SC_PLAN C 
+	 WHERE C.PLAN_RECID = A.PLAN_RECID AND C.OPKID = B.OPKID) 
+	) A 
+	INNER JOIN DWH.SC B ON B.STID = A.STID 
+	INNER JOIN DWH.SCKOPS C ON C.OPKID = A.OPKID 
+	) ; 
+  
+LABEL ON TABLE DWH.VSC_PLAN 
+	IS 'Sprav SC' ; 
+  
+LABEL ON COLUMN DWH.VSC_PLAN 
+( PLAN_RECID TEXT IS 'Plan Record Id' , 
+	ACOD TEXT IS 'Security ACOD in MIDAS system' , 
+	OPKID TEXT IS 'Kind of securities transactions' , 
+	STID TEXT IS 'Type of security' , 
+	OPKNMR TEXT IS 'Operation Kind Name RUS' ) ; 
+  
+CREATE VIEW DWH.VSC_PLAN2 ( 
+	PLAN_RECID , 
+	STID , 
+	ST_NAME , 
+	OPKID_1 , 
+	OPKNMR_1 , 
+	ACOD_1 , 
+	OPKID_2 , 
+	OPKNMR_2 , 
+	ACOD_2 , 
+	OPKID_3 , 
+	OPKNMR_3 , 
+	ACOD_3 , 
+	OPKID_4 , 
+	OPKNMR_4 , 
+	ACOD_4 , 
+	OPKID_5 , 
+	OPKNMR_5 , 
+	ACOD_5 , 
+	OPKID_6 , 
+	OPKNMR_6 , 
+	ACOD_6 , 
+	OPKID_7 , 
+	OPKNMR_7 , 
+	ACOD_7 ) 
+	AS 
+	( 
+	SELECT  
+	PLAN_RECID, MAX(STID) AS STID, MAX(ST_NAME) AS ST_NAME, 
+	-- 
+	MAX( CASE OPKID WHEN 1 THEN OPKID ELSE NULL END ) AS OPKID_1, 
+	MAX( CASE OPKID WHEN 1 THEN OPKNMR ELSE NULL END ) AS OPKNMR_1, 
+	MAX( CASE OPKID WHEN 1 THEN ACOD ELSE NULL END ) AS ACOD_1, 
+	-- 
+	MAX( CASE OPKID WHEN 2 THEN OPKID ELSE NULL END ) AS OPKID_2, 
+	MAX( CASE OPKID WHEN 2 THEN OPKNMR ELSE NULL END ) AS OPKNMR_2, 
+	MAX( CASE OPKID WHEN 2 THEN ACOD ELSE NULL END ) AS ACOD_2, 
+	-- 
+	MAX( CASE OPKID WHEN 3 THEN OPKID ELSE NULL END ) AS OPKID_3, 
+	MAX( CASE OPKID WHEN 3 THEN OPKNMR ELSE NULL END ) AS OPKNMR_3, 
+	MAX( CASE OPKID WHEN 3 THEN ACOD ELSE NULL END ) AS ACOD_3, 
+	-- 
+	MAX( CASE OPKID WHEN 4 THEN OPKID ELSE NULL END ) AS OPKID_4, 
+	MAX( CASE OPKID WHEN 4 THEN OPKNMR ELSE NULL END ) AS OPKNMR_4, 
+	MAX( CASE OPKID WHEN 4 THEN ACOD ELSE NULL END ) AS ACOD_4, 
+	-- 
+	MAX( CASE OPKID WHEN 5 THEN OPKID ELSE NULL END ) AS OPKID_5, 
+	MAX( CASE OPKID WHEN 5 THEN OPKNMR ELSE NULL END ) AS OPKNMR_5, 
+	MAX( CASE OPKID WHEN 5 THEN ACOD ELSE NULL END ) AS ACOD_5, 
+	-- 
+	MAX( CASE OPKID WHEN 6 THEN OPKID ELSE NULL END ) AS OPKID_6, 
+	MAX( CASE OPKID WHEN 6 THEN OPKNMR ELSE NULL END ) AS OPKNMR_6, 
+	MAX( CASE OPKID WHEN 6 THEN ACOD ELSE NULL END ) AS ACOD_6, 
+	-- 
+	MAX( CASE OPKID WHEN 7 THEN OPKID ELSE NULL END ) AS OPKID_7, 
+	MAX( CASE OPKID WHEN 7 THEN OPKNMR ELSE NULL END ) AS OPKNMR_7, 
+	MAX( CASE OPKID WHEN 7 THEN ACOD ELSE NULL END ) AS ACOD_7 
+	-- 
+	FROM DWH.VSC_PLAN 
+	GROUP BY PLAN_RECID 
+	) ; 
+  
+LABEL ON TABLE DWH.VSC_PLAN2 
+	IS 'Sprav SC grp' ; 
+  
+LABEL ON COLUMN DWH.VSC_PLAN2 
+( PLAN_RECID TEXT IS 'Plan Record Id' ) ; 
+  
+CREATE VIEW DWH.VW_CURRENCY_RATES ( 
+	TO_DATE , 
+	CURRENCY_CODE FOR COLUMN CURRE00001 , 
+	ABS_CURRENCY_CODE FOR COLUMN ABS_C00001 , 
+	RATE ) 
+	AS 
+	SELECT  
+		CURRATES.DAT AS TO_DATE, 
+		CURRNCY.CBCCY AS CURRENCY_CODE, 
+		CURRATES.CCY AS ABS_CURRENCY_CODE , 
+		CURRATES.AMNT * CURRATES.RATE0 AS RATE 
+	  
+	  
+	FROM DWH.CURRATES CURRATES 
+	JOIN DWH.CURRENCY CURRNCY ON CURRNCY.GLCCY = CURRATES.CCY ; 
+  
+LABEL ON COLUMN DWH.VW_CURRENCY_RATES 
+( TO_DATE IS 'Date' , 
+	ABS_CURRENCY_CODE IS 'Currency Code' ) ; 
+  
